@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Metadata Detective | EXIF Forensic Analyzer - PassGuard</title>
+  
+  <!-- Inter & Plus Jakarta Sans & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- exifr — Modern, fast, reliable EXIF parser (reads File/ArrayBuffer directly) -->
+  <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+  <!-- Leaflet Interactive Map CSS & JS for GPS geolocation -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- PassGuard Chatbot Styles -->
+  <link rel="stylesheet" href="chatbot.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            dark: {
+              950: '#060911',
+              900: '#090D16',
+              850: '#0D1322',
+              800: '#141C2E',
+              700: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: #060911;
+      color: #E2E8F0;
+      overflow-x: hidden;
+    }
+    @keyframes fighterLiveCombat {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        filter: drop-shadow(0 0 6px rgba(0, 255, 102, 0.5));
+      }
+      30% {
+        transform: translateY(-2px) rotate(-4deg) scale(1.05);
+        filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.7));
+      }
+      50% {
+        transform: translateX(3px) translateY(-1px) rotate(5deg) scale(1.08);
+        filter: drop-shadow(0 0 16px rgba(0, 255, 102, 0.9));
+      }
+      75% {
+        transform: translateY(1px) rotate(-1deg) scale(1.02);
+      }
+    }
+    .fighter-active {
+      animation: fighterLiveCombat 1.6s infinite ease-in-out;
+    }
+    #cyberCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -25;
+      pointer-events: none;
+      opacity: 0.65;
+    }
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(9, 13, 22, 0.65) 0%, rgba(6, 9, 17, 0.92) 100%);
+      backdrop-blur: 2px;
+      z-index: -20;
+      pointer-events: none;
+    }
+    video#bgVideo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      opacity: 0.35;
+      z-index: -30;
+      pointer-events: none;
+    }
+    #mapContainer {
+      height: 280px;
+      border-radius: 14px;
+      z-index: 10;
+    }
+    .leaflet-tile {
+      filter: brightness(0.7) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.85);
+    }
+    .leaflet-container {
+      background: #090D16 !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500/20 selection:text-blue-300 relative overflow-x-hidden">
+
+  <!-- 1. Background Video -->
+  <video id="bgVideo" autoplay loop muted playsinline webkit-playsinline>
+    <source src="bg-video.mp4" type="video/mp4" />
+  </video>
+
+  <!-- 2. Cyber Canvas -->
+  <canvas id="cyberCanvas"></canvas>
+
+  <!-- 3. Dark Overlay -->
+  <div class="bg-overlay"></div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-dark-900/85 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between">
+      <a href="preview.html" class="flex items-center gap-2.5 group">
+        <!-- Live Fighting Logo Arena -->
+        <div class="relative flex items-center gap-1.5 px-2 py-1 rounded-xl bg-dark-850 border border-cyan-500/40 shadow-[0_0_15px_rgba(0,240,255,0.25)] overflow-hidden">
+          <div class="bug-active w-4 h-4 rounded bg-amber-500/90 border border-amber-300 flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(245,158,11,0.8)]">
+            👾
+          </div>
+          <div class="clash-active absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs pointer-events-none text-cyan-300">
+            ⚡
+          </div>
+          <img
+            src="logo.png"
+            alt="Cyber Defender"
+            class="fighter-active w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_0_10px_rgba(0,255,102,0.6)]"
+          />
+        </div>
+
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-bold text-slate-100 text-sm tracking-tight">PassGuard</span>
+            <span class="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 animate-pulse">
+              FIGHTING LIVE
+            </span>
+          </div>
+          <span class="text-[10px] text-slate-400 block -mt-0.5">Mecha Cyber Defense</span>
+        </div>
+      </a>
+
+      <!-- 5 Navigation Tabs -->
+      <div class="flex items-center gap-1 bg-dark-850 border border-slate-800 p-1 rounded-xl text-xs overflow-x-auto max-w-full">
+        <a href="preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+          Password
+        </a>
+        <a href="breach-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+          Breach
+        </a>
+        <a href="phishing-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+          Phishing
+        </a>
+        <span class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30 text-[11px] sm:text-xs flex items-center gap-1">
+          <i data-lucide="camera" class="w-3.5 h-3.5 text-blue-400"></i>
+          EXIF Detective
+        </span>
+        <a href="chat-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs flex items-center gap-1">
+          <i data-lucide="bot" class="w-3.5 h-3.5 text-cyan-400"></i>
+          Chatbot
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Forensic Dashboard Section -->
+  <main class="max-w-5xl mx-auto px-3.5 sm:px-4 py-6 sm:py-8 w-full space-y-6 relative z-10 flex-1">
+    
+    <!-- Title Section -->
+    <div class="text-center space-y-1.5 sm:space-y-2">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-medium mb-1">
+        <i data-lucide="search" class="w-3.5 h-3.5 text-cyan-400"></i>
+        Forensic Image & EXIF Geolocation Analyzer
+      </div>
+      <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+        Metadata Detective
+      </h1>
+      <p class="text-slate-400 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
+        Upload JPG, JPEG, PNG, ya WebP images aur camera specs, hidden timestamps, GPS coordinates, editing software aur privacy leaks ka forensic inspection karein.
+      </p>
+    </div>
+
+    <!-- Upload Card -->
+    <div class="bg-dark-850/90 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-5 sm:p-7 shadow-2xl space-y-4">
+      
+      <!-- Drag & Drop Zone -->
+      <div
+        id="dropZone"
+        class="border-2 border-dashed border-slate-700 hover:border-cyan-500/60 rounded-xl p-6 sm:p-10 text-center cursor-pointer transition-all bg-dark-950/60 hover:bg-dark-950/80 group"
+      >
+        <input
+          id="fileInput"
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+          class="hidden"
+        />
+        
+        <div class="flex flex-col items-center justify-center space-y-3">
+          <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,240,255,0.2)]">
+            <i data-lucide="upload-cloud" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <p class="text-sm sm:text-base font-semibold text-white">
+              Drag & Drop image yahan karein, ya <span class="text-cyan-400 underline underline-offset-4">Browse karein</span>
+            </p>
+            <p class="text-xs text-slate-400 mt-1">
+              Supports: JPG, JPEG, PNG, WebP (Max file size: 25MB)
+            </p>
+          </div>
+          <div class="flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+            100% Client-Side Evaluation • Image server par kabhi upload nahi hoti
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Test Sample & Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-slate-400 font-medium">Sample Test:</span>
+          <button
+            id="sampleExifBtn"
+            type="button"
+            class="px-3 py-1.5 rounded-lg bg-dark-800 hover:bg-slate-700 text-slate-200 border border-slate-700/70 transition-colors flex items-center gap-1.5"
+          >
+            <i data-lucide="image" class="w-3.5 h-3.5 text-cyan-400"></i>
+            Sample GPS & Camera Photo
+          </button>
+        </div>
+
+        <button
+          id="resetBtn"
+          type="button"
+          class="px-3.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-rose-500/20 hover:text-rose-300 text-slate-400 border border-slate-700 transition-colors flex items-center gap-1.5"
+        >
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          Reset Investigation
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Error/Warning Notification Banner (Hidden by default) -->
+    <div id="statusBanner" class="hidden rounded-xl p-4 border text-xs sm:text-sm flex items-start gap-3 transition-all">
+      <div id="statusIcon" class="shrink-0 mt-0.5"></div>
+      <div class="space-y-0.5">
+        <h4 id="statusTitle" class="font-bold"></h4>
+        <p id="statusMsg" class="text-xs opacity-90"></p>
+      </div>
+    </div>
+
+    <!-- Results Dashboard (Hidden until image uploaded) -->
+    <div id="resultsDashboard" class="hidden space-y-6">
+      
+      <!-- Top Overview: Image Preview + Privacy Risk Assessment Card -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Image Preview Card -->
+        <div class="bg-dark-850/90 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col justify-between space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <i data-lucide="file-image" class="w-4 h-4 text-cyan-400"></i>
+              Uploaded Image
+            </span>
+            <span id="fileSizeBadge" class="text-[11px] font-mono text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+              0 KB
+            </span>
+          </div>
+
+          <div class="w-full h-56 rounded-xl bg-dark-950 border border-slate-800 flex items-center justify-center overflow-hidden p-2">
+            <img id="previewImg" src="" alt="Forensic Preview" class="max-w-full max-h-full object-contain rounded-lg" />
+          </div>
+
+          <div class="space-y-1.5 text-xs text-slate-300">
+            <div class="flex justify-between py-1 border-b border-slate-800/60">
+              <span class="text-slate-400">File Name:</span>
+              <span id="fileNameDisplay" class="font-mono text-white truncate max-w-[180px]">image.jpg</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-800/60">
+              <span class="text-slate-400">MIME Format:</span>
+              <span id="fileTypeDisplay" class="font-mono text-cyan-300 uppercase">JPEG</span>
+            </div>
+            <div class="flex justify-between py-1">
+              <span class="text-slate-400">Dimensions:</span>
+              <span id="imgDimensionsDisplay" class="font-mono text-white">0 × 0 px</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Privacy Threat Analysis (2 Columns wide) -->
+        <div class="lg:col-span-2 bg-dark-850/90 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Metadata Privacy & Risk Assessment
+              </span>
+              <h3 id="riskScoreTitle" class="text-xl sm:text-2xl font-extrabold text-white mt-0.5">
+                Assessing Privacy Exposure...
+              </h3>
+            </div>
+            <div id="riskScoreBadge" class="px-3.5 py-1 rounded-full text-xs font-bold tracking-wide border uppercase">
+              ANALYZING
+            </div>
+          </div>
+
+          <!-- Risk Factors Breakdown -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div id="gpsRiskBox" class="bg-dark-950/80 border border-slate-800 p-3 rounded-xl space-y-1">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-slate-300">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-400"></i>
+                GPS Geolocation
+              </div>
+              <p id="gpsRiskStatus" class="text-xs text-slate-400">Checking...</p>
+            </div>
+
+            <div id="deviceRiskBox" class="bg-dark-950/80 border border-slate-800 p-3 rounded-xl space-y-1">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-slate-300">
+                <i data-lucide="smartphone" class="w-3.5 h-3.5 text-amber-400"></i>
+                Device Fingerprint
+              </div>
+              <p id="deviceRiskStatus" class="text-xs text-slate-400">Checking...</p>
+            </div>
+
+            <div id="timeRiskBox" class="bg-dark-950/80 border border-slate-800 p-3 rounded-xl space-y-1">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-slate-300">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-blue-400"></i>
+                Timestamp History
+              </div>
+              <p id="timeRiskStatus" class="text-xs text-slate-400">Checking...</p>
+            </div>
+          </div>
+
+          <!-- Privacy Recommendation Box -->
+          <div id="privacyRecommendationBox" class="p-3.5 rounded-xl border bg-dark-950/90 text-xs leading-relaxed space-y-1">
+            <h5 id="recHeader" class="font-bold text-slate-200">Forensic Privacy Advice:</h5>
+            <p id="recText" class="text-slate-400"></p>
+          </div>
+
+          <!-- Action Buttons: Download JSON -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <button
+              id="downloadJsonBtn"
+              type="button"
+              class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-600/25"
+            >
+              <i data-lucide="download" class="w-4 h-4"></i>
+              Download Metadata (JSON)
+            </button>
+
+            <span class="text-[11px] text-slate-400">
+              Forensic Hash: <code id="forensicHash" class="text-cyan-400 font-mono">00000000</code>
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Interactive Map & Reverse Geocoded Address Section (Shown when GPS is available) -->
+      <div id="gpsMapSection" class="hidden bg-dark-850/90 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+        
+        <!-- Section Header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3.5">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+              <i data-lucide="map-pin" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                EXIF GPS Geolocation & Reverse Geocoding
+                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  CRITICAL EXPOSURE
+                </span>
+              </h4>
+              <p class="text-[11px] text-slate-400">Physical coordinates extracted from image EXIF + OpenStreetMap Nominatim street lookup</p>
+            </div>
+          </div>
+
+          <!-- GPS Coordinates Badges -->
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="text-xs font-mono text-cyan-300 bg-dark-950 px-3 py-1.5 rounded-xl border border-slate-800 flex items-center gap-1.5">
+              <span class="text-slate-500">DD:</span>
+              <span id="coordsBadge">0.000000, 0.000000</span>
+            </div>
+            <div class="text-xs font-mono text-amber-300 bg-dark-950 px-3 py-1.5 rounded-xl border border-slate-800 flex items-center gap-1.5">
+              <span class="text-slate-500">DMS:</span>
+              <span id="coordsDmsBadge">0° 0' 0" N, 0° 0' 0" E</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reverse Geocoded Address Intelligence Card -->
+        <div class="bg-dark-950/80 border border-slate-800/80 rounded-xl p-4 sm:p-5 space-y-3.5">
+          
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/70 pb-2.5">
+            <div class="flex items-center gap-2 text-xs font-bold text-slate-200">
+              <i data-lucide="compass" class="w-4 h-4 text-cyan-400"></i>
+              <span>OpenStreetMap Reverse Geocoded Address (zoom=18)</span>
+            </div>
+            <div id="geocodingStatusBadge" class="text-[10px] font-mono px-2.5 py-0.5 rounded-full border bg-cyan-500/10 text-cyan-300 border-cyan-500/30 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+              Lookup Ready
+            </div>
+          </div>
+
+          <!-- Loading Indicator (shown during fetch) -->
+          <div id="geocodingLoader" class="hidden py-4 text-center space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs">
+              <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-cyan-400"></i>
+              <span>Resolving street-level address via OpenStreetMap Nominatim (zoom=18)...</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Querying coordinates against OpenStreetMap database</p>
+          </div>
+
+          <!-- Error / Fallback Notification (shown if rate-limited or offline) -->
+          <div id="geocodingErrorNotice" class="hidden rounded-xl p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-amber-400"></i>
+            <span id="geocodingErrorMsg">Nominatim Reverse Geocode service is currently unavailable or rate-limited. Exact GPS coordinates remain intact.</span>
+          </div>
+
+          <!-- Structured Address Grid (7 Mandatory Fields) -->
+          <div id="geocodedAddressGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            
+            <!-- Country -->
+            <div class="bg-dark-900/90 border border-slate-800 p-2.5 rounded-lg space-y-1">
+              <span class="text-[11px] text-slate-400 block font-medium">Country</span>
+              <p id="geoCountry" class="font-semibold text-white truncate">Not available in OSM database</p>
+            </div>
+
+            <!-- State -->
+            <div class="bg-dark-900/90 border border-slate-800 p-2.5 rounded-lg space-y-1">
+              <span class="text-[11px] text-slate-400 block font-medium">State / Region</span>
+              <p id="geoState" class="font-semibold text-white truncate">Not available in OSM database</p>
+            </div>
+
+            <!-- City -->
+            <div class="bg-dark-900/90 border border-slate-800 p-2.5 rounded-lg space-y-1">
+              <span class="text-[11px] text-slate-400 block font-medium">City / Town</span>
+              <p id="geoCity" class="font-semibold text-cyan-300 truncate">Not available in OSM database</p>
+            </div>
+
+            <!-- District -->
+            <div class="bg-dark-900/90 border border-slate-800 p-2.5 rounded-lg space-y-1">
+              <span class="text-[11px] text-slate-400 block font-medium">District / County</span>
+              <p id="geoDistrict" class="font-semibold text-white truncate">Not available in OSM database</p>
+            </div>
+
+            <!-- Locality / Neighbourhood -->
+            <div class="bg-dark-900/90 border border-slate-800 p-2.5 rounded-lg space-y-1">
+              <span class="text-[11px] text-slate-400 block font-medium">Locality / Neighbourhood</span>
+              <p id="geoLocality" class="font-semibold text-amber-300 truncate">Not available in OSM database</p>
+            </div>
+
+            <!-- Street Name -->
+            <div class="bg-dark-900/90 border border-slate-800 p-2.5 rounded-lg space-y-1 sm:col-span-2">
+              <span class="text-[11px] text-slate-400 block font-medium">Street Name / Road</span>
+              <p id="geoStreet" class="font-semibold text-white truncate">Not available in OSM database</p>
+            </div>
+
+            <!-- Nearby Landmark -->
+            <div class="bg-dark-900/90 border border-slate-800 p-2.5 rounded-lg space-y-1 sm:col-span-2 lg:col-span-1">
+              <span class="text-[11px] text-slate-400 block font-medium">Nearby Landmark / POI</span>
+              <p id="geoLandmark" class="font-semibold text-emerald-300 truncate">Not available in OSM database</p>
+            </div>
+
+          </div>
+
+          <!-- Full Formatted Address String -->
+          <div class="pt-1 text-xs">
+            <span class="text-slate-400 text-[11px] block">Full Mapped Address (Display Name):</span>
+            <p id="geoFormattedAddress" class="text-slate-200 font-mono text-[11px] leading-relaxed mt-0.5 bg-dark-900 p-2 rounded-lg border border-slate-800/80">
+              Awaiting coordinates reverse lookup...
+            </p>
+          </div>
+
+          <!-- Mandatory Accuracy Disclaimer -->
+          <div class="flex items-center gap-1.5 text-[11px] text-slate-400 bg-dark-900/60 p-2 rounded-lg border border-slate-800/60">
+            <i data-lucide="info" class="w-3.5 h-3.5 text-cyan-400 shrink-0"></i>
+            <span>Accuracy Note: Showing the nearest mapped OpenStreetMap address, not a guaranteed exact building address. Coordinates are mathematically preserved.</span>
+          </div>
+
+        </div>
+
+        <!-- Leaflet Map Canvas (zoom=18) -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span class="font-medium">Interactive Street Map (OpenStreetMap Tiles • zoom=18):</span>
+            <span id="gpsAltitudeText" class="font-mono text-cyan-300">Altitude: Not available</span>
+          </div>
+          <div id="mapContainer" class="w-full"></div>
+        </div>
+
+        <!-- Navigation & Action Links -->
+        <div class="flex flex-wrap items-center justify-between gap-2.5 text-xs pt-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <a
+              id="googleMapsLink"
+              href="#"
+              target="_blank"
+              class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors flex items-center gap-1.5"
+            >
+              <i data-lucide="navigation" class="w-3.5 h-3.5 text-cyan-400"></i>
+              Google Maps Navigation <i data-lucide="external-link" class="w-3 h-3 text-slate-400"></i>
+            </a>
+
+            <a
+              id="osmLink"
+              href="#"
+              target="_blank"
+              class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors flex items-center gap-1.5"
+            >
+              <i data-lucide="map" class="w-3.5 h-3.5 text-emerald-400"></i>
+              OpenStreetMap View <i data-lucide="external-link" class="w-3 h-3 text-slate-400"></i>
+            </a>
+          </div>
+
+          <button
+            id="copyCoordsBtn"
+            type="button"
+            class="px-3 py-1.5 rounded-xl bg-dark-950 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors flex items-center gap-1.5"
+          >
+            <i data-lucide="copy" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Copy GPS Coordinates</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- No GPS Warning Card (Shown when GPS is missing) -->
+      <div id="noGpsCard" class="hidden bg-dark-850/60 border border-slate-800 rounded-2xl p-4 text-xs text-slate-300 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 shrink-0">
+          <i data-lucide="map-pin-off" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <span class="font-bold text-white block">GPS Geolocation Data Stripped or Unavailable</span>
+          <span class="text-slate-400 text-[11px]">Is image me koi geographical latitude/longitude tag nahi mila. Aapki physical location safe hai.</span>
+        </div>
+      </div>
+
+      <!-- Detailed Forensic Metadata Specification Grid -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+          <span>Forensic Inspection Breakdown</span>
+          <span id="totalTagsCount">0 Tags Extracted</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          
+          <!-- Card 1: Camera & Hardware -->
+          <div class="bg-dark-850/90 border border-slate-700/60 rounded-xl p-4 space-y-3">
+            <div class="flex items-center gap-2 border-b border-slate-800 pb-2 text-slate-200 font-bold text-xs">
+              <i data-lucide="camera" class="w-4 h-4 text-cyan-400"></i>
+              Hardware & Device
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between">
+                <span class="text-slate-400">Manufacturer:</span>
+                <span id="metaMake" class="font-mono text-white text-right">Not available</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Model:</span>
+                <span id="metaModel" class="font-mono text-cyan-300 text-right">Not available</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Software / OS:</span>
+                <span id="metaSoftware" class="font-mono text-slate-200 text-right">Not available</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Lens Model:</span>
+                <span id="metaLens" class="font-mono text-slate-200 text-right">Not available</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Capture Timestamps -->
+          <div class="bg-dark-850/90 border border-slate-700/60 rounded-xl p-4 space-y-3">
+            <div class="flex items-center gap-2 border-b border-slate-800 pb-2 text-slate-200 font-bold text-xs">
+              <i data-lucide="calendar" class="w-4 h-4 text-emerald-400"></i>
+              Timestamps & History
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between">
+                <span class="text-slate-400">Date Captured:</span>
+                <span id="metaDateOriginal" class="font-mono text-white text-right">Not available</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Date Digitized:</span>
+                <span id="metaDateDigitized" class="font-mono text-slate-300 text-right">Not available</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Date Modified:</span>
+                <span id="metaDateModified" class="font-mono text-slate-300 text-right">Not available</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Color Space:</span>
+                <span id="metaColorSpace" class="font-mono text-cyan-300 text-right">sRGB</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Camera Optics & Exposure -->
+          <div class="bg-dark-850/90 border border-slate-700/60 rounded-xl p-4 space-y-3">
+            <div class="flex items-center gap-2 border-b border-slate-800 pb-2 text-slate-200 font-bold text-xs">
+              <i data-lucide="aperture" class="w-4 h-4 text-amber-400"></i>
+              Camera Optics & Settings
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between">
+                <span class="text-slate-400">ISO Speed:</span>
+                <span id="metaIso" class="font-mono text-white text-right">Not available</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Aperture (F-Stop):</span>
+                <span id="metaAperture" class="font-mono text-amber-300 text-right">Not available</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Shutter Speed:</span>
+                <span id="metaShutter" class="font-mono text-slate-200 text-right">Not available</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Focal Length:</span>
+                <span id="metaFocalLength" class="font-mono text-slate-200 text-right">Not available</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Flash:</span>
+                <span id="metaFlash" class="font-mono text-slate-200 text-right">Not available</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Raw Metadata Viewer (Collapsible) -->
+        <div class="bg-dark-850/90 border border-slate-700/60 rounded-xl overflow-hidden">
+          <button
+            id="toggleRawBtn"
+            type="button"
+            class="w-full px-4 py-3 bg-dark-900/90 hover:bg-dark-800/80 border-b border-slate-800 text-left text-xs font-semibold text-slate-300 flex items-center justify-between transition-colors"
+          >
+            <span class="flex items-center gap-2">
+              <i data-lucide="code" class="w-4 h-4 text-cyan-400"></i>
+              Raw Extracted EXIF Dictionary (All Fields)
+            </span>
+            <span id="rawToggleIcon">▼</span>
+          </button>
+          <div id="rawJsonBox" class="hidden p-4 bg-dark-950 font-cyber-mono text-xs text-cyan-300 overflow-x-auto max-h-64 leading-relaxed">
+            <pre id="rawJsonPre">{}</pre>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Clean Minimalist Footer -->
+  <footer class="border-t border-slate-800/80 py-4 sm:py-5 text-center text-xs text-slate-400 relative z-10 bg-dark-900/80 backdrop-blur-md">
+    <p>100% In-Browser Forensic Privacy: Images are processed exclusively in your browser memory and never uploaded to any remote server.</p>
+  </footer>
+
+  <script>
+    // ============================================================
+    //  EXIF FORENSIC ANALYZER — Powered by exifr (modern parser)
+    //  100% client-side, no server uploads
+    // ============================================================
+
+    let currentMap = null;
+    let currentMarker = null;
+    let currentExtractedData = null;
+
+    // ---- Convert decimal degrees to DMS string ----
+    function decimalToDMS(deg, isLat) {
+      if (deg === null || deg === undefined || isNaN(deg)) return "N/A";
+      const absolute = Math.abs(deg);
+      const degrees = Math.floor(absolute);
+      const minutesNotTruncated = (absolute - degrees) * 60;
+      const minutes = Math.floor(minutesNotTruncated);
+      const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(2);
+      const direction = isLat ? (deg >= 0 ? "N" : "S") : (deg >= 0 ? "E" : "W");
+      return `${degrees}\u00B0 ${minutes}' ${seconds}" ${direction}`;
+    }
+
+    // ---- Format file size ----
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // ---- Quick hash ----
+    function generateQuickHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash).toString(16).padStart(8, '0');
+    }
+
+    // ---- In-memory geocode cache ----
+    const geocodeCache = new Map();
+
+    // ---- Reverse geocoding via OSM Nominatim (zoom=18) ----
+    async function performReverseGeocode(lat, lon) {
+      const loader = document.getElementById("geocodingLoader");
+      const errorNotice = document.getElementById("geocodingErrorNotice");
+      const errorMsg = document.getElementById("geocodingErrorMsg");
+      const statusBadge = document.getElementById("geocodingStatusBadge");
+
+      const placeholder = '<span class="text-slate-500 italic">Not available in OSM database</span>';
+      const cacheKey = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+
+      function applyAddressData(data, sourceBadge) {
+        const addr = data.address || {};
+        const country = addr.country || null;
+        const state = addr.state || addr.province || addr.region || null;
+        const city = addr.city || addr.town || addr.village || addr.municipality || addr.hamlet || null;
+        const district = addr.county || addr.district || addr.state_district || addr.city_district || null;
+        const locality = addr.neighbourhood || addr.suburb || addr.quarter || addr.residential || addr.subdivision || null;
+        const street = addr.road || addr.street || addr.pedestrian || addr.footway || addr.path || (addr.house_number ? `${addr.house_number} ${addr.road || ''}`.trim() : null);
+        const landmark = addr.amenity || addr.building || addr.historic || addr.tourism || addr.leisure || addr.shop || (data.name && data.name !== street ? data.name : null);
+
+        document.getElementById("geoCountry").textContent = country || "Not available in OSM database";
+        if (!country) document.getElementById("geoCountry").innerHTML = placeholder;
+
+        document.getElementById("geoState").textContent = state || "Not available in OSM database";
+        if (!state) document.getElementById("geoState").innerHTML = placeholder;
+
+        document.getElementById("geoCity").textContent = city || "Not available in OSM database";
+        if (!city) document.getElementById("geoCity").innerHTML = placeholder;
+
+        document.getElementById("geoDistrict").textContent = district || "Not available in OSM database";
+        if (!district) document.getElementById("geoDistrict").innerHTML = placeholder;
+
+        document.getElementById("geoLocality").textContent = locality || "Not available in OSM database";
+        if (!locality) document.getElementById("geoLocality").innerHTML = placeholder;
+
+        document.getElementById("geoStreet").textContent = street || "Not available in OSM database";
+        if (!street) document.getElementById("geoStreet").innerHTML = placeholder;
+
+        document.getElementById("geoLandmark").textContent = landmark || "Not available in OSM database";
+        if (!landmark) document.getElementById("geoLandmark").innerHTML = placeholder;
+
+        document.getElementById("geoFormattedAddress").textContent = data.display_name || "Address resolved.";
+
+        statusBadge.className = "text-[10px] font-mono px-2.5 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-300 border-emerald-500/30 flex items-center gap-1";
+        statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> ${sourceBadge || 'Resolved (zoom=18)'}`;
+
+        if (currentExtractedData && currentExtractedData.gps) {
+          currentExtractedData.gps.reverseGeocode = {
+            source: "OpenStreetMap Nominatim",
+            zoom: 18,
+            country, state, city, district, locality, street,
+            nearbyLandmark: landmark,
+            fullDisplayName: data.display_name,
+            accuracyNotice: "Showing nearest mapped OpenStreetMap address, not a guaranteed exact building address."
+          };
+          document.getElementById("rawJsonPre").textContent = JSON.stringify(currentExtractedData, null, 2);
+        }
+
+        if (currentMarker) {
+          const popupContent = `
+            <div style="font-family: sans-serif; font-size: 11px; line-height: 1.4; color: #0f172a;">
+              <b style="color: #0284c7;">EXIF GPS Location</b><br/>
+              <b>Lat:</b> ${lat.toFixed(6)} | <b>Lon:</b> ${lon.toFixed(6)}<br/>
+              ${landmark ? `<b>Landmark:</b> ${landmark}<br/>` : ''}
+              ${street ? `<b>Street:</b> ${street}<br/>` : ''}
+              ${city ? `<b>City:</b> ${city}, ` : ''}${country || ''}
+            </div>
+          `;
+          currentMarker.bindPopup(popupContent).openPopup();
+        }
+      }
+
+      // Check cache
+      if (geocodeCache.has(cacheKey)) {
+        loader.classList.add("hidden");
+        errorNotice.classList.add("hidden");
+        applyAddressData(geocodeCache.get(cacheKey), "Cached (Instant)");
+        return geocodeCache.get(cacheKey);
+      }
+
+      // Reset UI
+      document.getElementById("geoCountry").innerHTML = placeholder;
+      document.getElementById("geoState").innerHTML = placeholder;
+      document.getElementById("geoCity").innerHTML = placeholder;
+      document.getElementById("geoDistrict").innerHTML = placeholder;
+      document.getElementById("geoLocality").innerHTML = placeholder;
+      document.getElementById("geoStreet").innerHTML = placeholder;
+      document.getElementById("geoLandmark").innerHTML = placeholder;
+      document.getElementById("geoFormattedAddress").textContent = "Resolving street address via OpenStreetMap Nominatim (zoom=18)...";
+
+      loader.classList.remove("hidden");
+      errorNotice.classList.add("hidden");
+      statusBadge.className = "text-[10px] font-mono px-2.5 py-0.5 rounded-full border bg-amber-500/10 text-amber-300 border-amber-500/30 flex items-center gap-1";
+      statusBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Querying OSM (zoom=18)...';
+
+      const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const resp = await fetch(nominatimUrl, {
+          headers: { "Accept": "application/json" },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!resp.ok) throw new Error(`Nominatim HTTP ${resp.status}`);
+
+        const data = await resp.json();
+        loader.classList.add("hidden");
+
+        if (!data || !data.address) {
+          statusBadge.className = "text-[10px] font-mono px-2.5 py-0.5 rounded-full border bg-slate-800 text-slate-400 border-slate-700";
+          statusBadge.textContent = "No Street Address in OSM";
+          document.getElementById("geoFormattedAddress").textContent = data?.display_name || "Coordinates point to an unmapped geographic area in OpenStreetMap.";
+          return null;
+        }
+
+        geocodeCache.set(cacheKey, data);
+        applyAddressData(data, "Resolved (zoom=18)");
+        return data;
+
+      } catch (err) {
+        console.warn("Nominatim reverse geocode error:", err);
+        loader.classList.add("hidden");
+        errorNotice.classList.remove("hidden");
+        errorMsg.textContent = `OpenStreetMap Nominatim Unavailable (${err.message || 'Offline or Rate Limited'}). Exact GPS coordinates (${lat.toFixed(6)}, ${lon.toFixed(6)}) remain preserved.`;
+
+        statusBadge.className = "text-[10px] font-mono px-2.5 py-0.5 rounded-full border bg-rose-500/10 text-rose-300 border-rose-500/30 flex items-center gap-1";
+        statusBadge.textContent = "OSM Rate Limited / Offline";
+        document.getElementById("geoFormattedAddress").textContent = "Unable to fetch reverse geocoding data from OpenStreetMap. You can navigate directly via Google Maps using the button below.";
+
+        return null;
+      }
+    }
+
+    // ============================================================
+    //  DOM READY
+    // ============================================================
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const resetBtn = document.getElementById("resetBtn");
+      const sampleExifBtn = document.getElementById("sampleExifBtn");
+      const resultsDashboard = document.getElementById("resultsDashboard");
+      const statusBanner = document.getElementById("statusBanner");
+      const statusTitle = document.getElementById("statusTitle");
+      const statusMsg = document.getElementById("statusMsg");
+      const statusIcon = document.getElementById("statusIcon");
+      const previewImg = document.getElementById("previewImg");
+      const downloadJsonBtn = document.getElementById("downloadJsonBtn");
+      const toggleRawBtn = document.getElementById("toggleRawBtn");
+      const rawJsonBox = document.getElementById("rawJsonBox");
+      const rawJsonPre = document.getElementById("rawJsonPre");
+
+      // ---- Drag & Drop ----
+      dropZone.addEventListener("click", () => fileInput.click());
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("border-cyan-400", "bg-cyan-500/10");
+      });
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("border-cyan-400", "bg-cyan-500/10");
+      });
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("border-cyan-400", "bg-cyan-500/10");
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          processFile(e.dataTransfer.files[0]);
+        }
+      });
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          processFile(e.target.files[0]);
+        }
+      });
+
+      // ---- Banner ----
+      function showBanner(type, title, msg) {
+        statusBanner.className = "rounded-xl p-4 border text-xs sm:text-sm flex items-start gap-3 transition-all";
+        if (type === "error") {
+          statusBanner.classList.add("bg-rose-500/15", "border-rose-500/40", "text-rose-200");
+          statusIcon.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 text-rose-400"></i>';
+        } else if (type === "warning") {
+          statusBanner.classList.add("bg-amber-500/15", "border-amber-500/40", "text-amber-200");
+          statusIcon.innerHTML = '<i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400"></i>';
+        } else {
+          statusBanner.classList.add("bg-emerald-500/15", "border-emerald-500/40", "text-emerald-200");
+          statusIcon.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>';
+        }
+        statusTitle.textContent = title;
+        statusMsg.textContent = msg;
+        statusBanner.classList.remove("hidden");
+        lucide.createIcons();
+      }
+      function hideBanner() { statusBanner.classList.add("hidden"); }
+
+      // ---- Reset ----
+      function resetApp() {
+        fileInput.value = "";
+        previewImg.src = "";
+        resultsDashboard.classList.add("hidden");
+        hideBanner();
+        if (currentMap) { currentMap.remove(); currentMap = null; }
+        currentExtractedData = null;
+      }
+      resetBtn.addEventListener("click", resetApp);
+
+      // ---- Raw JSON toggle ----
+      toggleRawBtn.addEventListener("click", () => {
+        const isHidden = rawJsonBox.classList.contains("hidden");
+        rawJsonBox.classList.toggle("hidden");
+        document.getElementById("rawToggleIcon").textContent = isHidden ? "▲" : "▼";
+      });
+
+      // ============================================================
+      //  MAIN FILE PROCESSOR — uses exifr for reliable EXIF parsing
+      // ============================================================
+      function processFile(file) {
+        hideBanner();
+
+        const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+        if (!allowed.includes(file.type.toLowerCase()) && !/\.(jpe?g|png|webp)$/i.test(file.name)) {
+          showBanner("error", "Unsupported File Type", "Sirf JPG, JPEG, PNG, aur WebP image formats supported hain.");
+          return;
+        }
+
+        if (file.size > 25 * 1024 * 1024) {
+          showBanner("error", "File Too Large", "Image size 25MB se kam honi chahiye.");
+          return;
+        }
+
+        // Show preview image
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const imgUrl = e.target.result;
+          previewImg.src = imgUrl;
+
+          const tempImg = new Image();
+          tempImg.onload = function () {
+            const width = tempImg.naturalWidth;
+            const height = tempImg.naturalHeight;
+            document.getElementById("imgDimensionsDisplay").textContent = `${width} \u00D7 ${height} px`;
+
+            // Extract EXIF from raw File object using exifr
+            extractExifWithExifr(file, width, height);
+          };
+          tempImg.onerror = function () {
+            showBanner("error", "Corrupted Image", "Image load nahi ho saki ya file corrupt hai.");
+          };
+          tempImg.src = imgUrl;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // ============================================================
+      //  EXIF EXTRACTION via exifr library
+      // ============================================================
+      async function extractExifWithExifr(file, width, height) {
+        document.getElementById("fileNameDisplay").textContent = file.name;
+        document.getElementById("fileTypeDisplay").textContent = file.type || file.name.split('.').pop();
+        document.getElementById("fileSizeBadge").textContent = formatBytes(file.size);
+        document.getElementById("forensicHash").textContent = generateQuickHash(file.name + file.size + width);
+
+        let allTags = {};
+        let gpsData = null;
+
+        try {
+          // Parse ALL EXIF tags from the raw File blob
+          allTags = await exifr.parse(file, {
+            // Extract everything
+            tiff: true,
+            exif: true,
+            gps: true,
+            ifd0: true,
+            ifd1: true,
+            interop: true,
+            iptc: true,
+            xmp: true,
+            jfif: true,
+            ihdr: true,
+            icc: false,       // skip binary ICC profile
+            makerNote: false,  // skip large binary maker notes
+            userComment: false,
+            translateKeys: true,
+            translateValues: true,
+            reviveValues: true,
+            mergeOutput: true,
+          }) || {};
+
+          // Also try dedicated GPS extraction for maximum reliability
+          try {
+            gpsData = await exifr.gps(file);
+          } catch(gpsErr) {
+            // gps() throws if no GPS found, that's fine
+          }
+        } catch (parseErr) {
+          console.warn("exifr parse error:", parseErr);
+          allTags = {};
+        }
+
+        const hasExif = Object.keys(allTags).length > 0;
+
+        // ---- Extract fields (exifr returns them as plain values) ----
+        const make = allTags.Make || "Not available";
+        const model = allTags.Model || "Not available";
+        const software = allTags.Software || "Not available";
+        const lensModel = allTags.LensModel || allTags.LensInfo || "Not available";
+
+        // Timestamps — exifr returns Date objects, convert to string
+        function formatExifDate(val) {
+          if (!val) return "Not available";
+          if (val instanceof Date) {
+            return val.toISOString().replace('T', ' ').substring(0, 19);
+          }
+          return String(val);
+        }
+        const dateOriginal = formatExifDate(allTags.DateTimeOriginal || allTags.CreateDate);
+        const dateDigitized = formatExifDate(allTags.DateTimeDigitized || allTags.CreateDate);
+        const dateModified = formatExifDate(allTags.ModifyDate || allTags.DateTime);
+
+        // ISO
+        const iso = allTags.ISO || allTags.ISOSpeedRatings || "Not available";
+
+        // Aperture
+        let aperture = allTags.FNumber || allTags.ApertureValue;
+        if (aperture !== undefined && aperture !== null) {
+          aperture = `f/${parseFloat(aperture).toFixed(1)}`;
+        } else {
+          aperture = "Not available";
+        }
+
+        // Shutter speed
+        let shutter = allTags.ExposureTime;
+        if (shutter !== undefined && shutter !== null) {
+          if (shutter < 1) {
+            shutter = `1/${Math.round(1 / shutter)}s`;
+          } else {
+            shutter = `${parseFloat(shutter).toFixed(3)}s`;
+          }
+        } else {
+          shutter = "Not available";
+        }
+
+        // Focal length
+        let focal = allTags.FocalLength;
+        if (focal !== undefined && focal !== null) {
+          focal = `${parseFloat(focal).toFixed(1)} mm`;
+        } else {
+          focal = "Not available";
+        }
+
+        // Flash
+        const flash = allTags.Flash !== undefined ? String(allTags.Flash) : "Not available";
+
+        // Color space
+        const colorSpace = allTags.ColorSpace || "sRGB";
+
+        // ---- GPS ----
+        let latDecimal = null;
+        let lonDecimal = null;
+        let altDecimal = null;
+
+        // Prefer exifr.gps() result (already decimal degrees)
+        if (gpsData && gpsData.latitude !== undefined && gpsData.longitude !== undefined) {
+          latDecimal = parseFloat(gpsData.latitude.toFixed(6));
+          lonDecimal = parseFloat(gpsData.longitude.toFixed(6));
+        }
+        // Fallback: exifr merged output has latitude/longitude as numbers
+        else if (allTags.latitude !== undefined && allTags.longitude !== undefined) {
+          latDecimal = parseFloat(parseFloat(allTags.latitude).toFixed(6));
+          lonDecimal = parseFloat(parseFloat(allTags.longitude).toFixed(6));
+        }
+        // Fallback: raw GPSLatitude / GPSLongitude arrays
+        else if (allTags.GPSLatitude && allTags.GPSLongitude) {
+          const latArr = allTags.GPSLatitude;
+          const lonArr = allTags.GPSLongitude;
+          const latRef = allTags.GPSLatitudeRef || "N";
+          const lonRef = allTags.GPSLongitudeRef || "E";
+          if (Array.isArray(latArr) && latArr.length >= 3) {
+            let dd = latArr[0] + latArr[1] / 60 + latArr[2] / 3600;
+            if (latRef === "S") dd = -dd;
+            latDecimal = parseFloat(dd.toFixed(6));
+          }
+          if (Array.isArray(lonArr) && lonArr.length >= 3) {
+            let dd = lonArr[0] + lonArr[1] / 60 + lonArr[2] / 3600;
+            if (lonRef === "W") dd = -dd;
+            lonDecimal = parseFloat(dd.toFixed(6));
+          }
+        }
+
+        // GPS Altitude
+        if (allTags.GPSAltitude !== undefined && allTags.GPSAltitude !== null) {
+          altDecimal = `${parseFloat(allTags.GPSAltitude).toFixed(1)} meters`;
+        }
+
+        // ---- Populate UI ----
+        document.getElementById("metaMake").textContent = make;
+        document.getElementById("metaModel").textContent = model;
+        document.getElementById("metaSoftware").textContent = software;
+        document.getElementById("metaLens").textContent = typeof lensModel === 'string' ? lensModel : String(lensModel);
+        document.getElementById("metaDateOriginal").textContent = dateOriginal;
+        document.getElementById("metaDateDigitized").textContent = dateDigitized;
+        document.getElementById("metaDateModified").textContent = dateModified;
+        document.getElementById("metaColorSpace").textContent = typeof colorSpace === 'number' ? (colorSpace === 1 ? 'sRGB' : colorSpace === 65535 ? 'Uncalibrated' : String(colorSpace)) : String(colorSpace);
+        document.getElementById("metaIso").textContent = iso;
+        document.getElementById("metaAperture").textContent = aperture;
+        document.getElementById("metaShutter").textContent = shutter;
+        document.getElementById("metaFocalLength").textContent = focal;
+        document.getElementById("metaFlash").textContent = flash;
+
+        const tagsCount = Object.keys(allTags).length;
+        document.getElementById("totalTagsCount").textContent = `${tagsCount} EXIF Tags Extracted`;
+
+        // Build serializable JSON (skip binary blobs)
+        const serializableTags = {};
+        for (const key in allTags) {
+          const val = allTags[key];
+          if (val instanceof ArrayBuffer || val instanceof Uint8Array) continue;
+          if (val instanceof Date) {
+            serializableTags[key] = val.toISOString();
+          } else if (typeof val === 'object' && val !== null) {
+            try { serializableTags[key] = JSON.parse(JSON.stringify(val)); } catch(e) { serializableTags[key] = String(val); }
+          } else {
+            serializableTags[key] = val;
+          }
+        }
+
+        currentExtractedData = {
+          investigationDate: new Date().toISOString(),
+          fileInfo: { name: file.name, size: file.size, type: file.type, dimensions: `${width}x${height}` },
+          hardware: { make, model, software, lensModel: typeof lensModel === 'string' ? lensModel : String(lensModel) },
+          timestamps: { dateOriginal, dateDigitized, dateModified },
+          optics: { iso: String(iso), aperture, shutter, focalLength: focal, flash },
+          gps: {
+            latitude: latDecimal,
+            longitude: lonDecimal,
+            altitude: altDecimal,
+            hasGps: latDecimal !== null
+          },
+          rawExif: serializableTags
+        };
+
+        rawJsonPre.textContent = JSON.stringify(currentExtractedData, null, 2);
+
+        // ---- GPS Map ----
+        const gpsSection = document.getElementById("gpsMapSection");
+        const noGpsCard = document.getElementById("noGpsCard");
+
+        if (latDecimal !== null && lonDecimal !== null && !isNaN(latDecimal) && !isNaN(lonDecimal)) {
+          gpsSection.classList.remove("hidden");
+          noGpsCard.classList.add("hidden");
+
+          const dmsFormatted = `${decimalToDMS(latDecimal, true)}, ${decimalToDMS(lonDecimal, false)}`;
+          document.getElementById("coordsBadge").textContent = `${latDecimal.toFixed(6)}, ${lonDecimal.toFixed(6)}`;
+          document.getElementById("coordsDmsBadge").textContent = dmsFormatted;
+          document.getElementById("gpsAltitudeText").textContent = altDecimal ? `Altitude: ${altDecimal}` : `Altitude: Sea Level / Unspecified`;
+
+          document.getElementById("googleMapsLink").href = `https://www.google.com/maps/search/?api=1&query=${latDecimal},${lonDecimal}`;
+          document.getElementById("osmLink").href = `https://www.openstreetmap.org/?mlat=${latDecimal}&mlon=${lonDecimal}#map=18/${latDecimal}/${lonDecimal}`;
+
+          // Leaflet map
+          setTimeout(() => {
+            if (currentMap) currentMap.remove();
+            currentMap = L.map("mapContainer").setView([latDecimal, lonDecimal], 18);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              attribution: "\u00A9 OpenStreetMap contributors",
+              maxZoom: 19,
+            }).addTo(currentMap);
+            currentMarker = L.marker([latDecimal, lonDecimal]).addTo(currentMap);
+            currentMarker.bindPopup(`<b>EXIF GPS Location</b><br/>Lat: ${latDecimal.toFixed(6)}<br/>Lon: ${lonDecimal.toFixed(6)}`).openPopup();
+            currentMap.invalidateSize();
+          }, 200);
+
+          // Reverse geocode
+          performReverseGeocode(latDecimal, lonDecimal);
+
+        } else {
+          gpsSection.classList.add("hidden");
+          noGpsCard.classList.remove("hidden");
+          if (currentMap) { currentMap.remove(); currentMap = null; }
+        }
+
+        // Privacy threat
+        evaluatePrivacyThreat(
+          latDecimal !== null,
+          make !== "Not available" || model !== "Not available",
+          dateOriginal !== "Not available",
+          software !== "Not available",
+          tagsCount
+        );
+
+        resultsDashboard.classList.remove("hidden");
+        lucide.createIcons();
+
+        if (!hasExif) {
+          showBanner("warning", "No EXIF Metadata Detected", "Is image me koi camera ya GPS metadata nahi mila. Likely ye social media (WhatsApp, Instagram, Twitter) se download hui hai jahan EXIF strip ho jaata hai.");
+        } else if (latDecimal !== null) {
+          showBanner("warning", "Privacy Warning: Physical Coordinates Exposed", `Is image me exact GPS coordinates (${latDecimal}, ${lonDecimal}) mile hain. Anyone with this file can locate your place!`);
+        } else {
+          showBanner("success", "Forensic Extraction Completed", `Successfully parsed ${tagsCount} EXIF tags from ${file.name}.`);
+        }
+      }
+
+      // ---- Privacy Risk Evaluation ----
+      function evaluatePrivacyThreat(hasGps, hasDevice, hasTime, hasSoftware, totalTags) {
+        const title = document.getElementById("riskScoreTitle");
+        const badge = document.getElementById("riskScoreBadge");
+        const recText = document.getElementById("recText");
+        const gpsStatus = document.getElementById("gpsRiskStatus");
+        const deviceStatus = document.getElementById("deviceRiskStatus");
+        const timeStatus = document.getElementById("timeRiskStatus");
+
+        if (hasGps) {
+          title.textContent = "CRITICAL PRIVACY RISK";
+          badge.textContent = "HIGH EXPOSURE";
+          badge.className = "px-3.5 py-1 rounded-full text-xs font-bold tracking-wide border uppercase bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.3)]";
+          gpsStatus.innerHTML = '<span class="text-rose-400 font-bold">\u25CF Physical Coordinates Exposed</span>';
+          deviceStatus.innerHTML = hasDevice ? '<span class="text-amber-400 font-bold">\u25CF Camera Model Leaked</span>' : '<span class="text-emerald-400">Clean</span>';
+          timeStatus.innerHTML = hasTime ? '<span class="text-amber-400 font-bold">\u25CF Exact Timestamp Leaked</span>' : '<span class="text-emerald-400">Clean</span>';
+          recText.textContent = "Khatra: Is image me aapke ghar ya shooting location ke exact GPS coordinates moujood hain! Kisi bhi public platform par upload karne se pehle 'EXIF Stripper' ya screenshot tool se metadata remove karein.";
+        } else if (hasDevice || hasTime || totalTags > 5) {
+          title.textContent = "MODERATE PRIVACY RISK";
+          badge.textContent = "DEVICE FINGERPRINTED";
+          badge.className = "px-3.5 py-1 rounded-full text-xs font-bold tracking-wide border uppercase bg-amber-500/20 text-amber-300 border-amber-500/40";
+          gpsStatus.innerHTML = '<span class="text-emerald-400 font-bold">\u25CF No GPS Data Found</span>';
+          deviceStatus.innerHTML = hasDevice ? '<span class="text-amber-400 font-bold">\u25CF Camera Model Leaked</span>' : '<span class="text-emerald-400">Clean</span>';
+          timeStatus.innerHTML = hasTime ? '<span class="text-amber-400 font-bold">\u25CF Exact Time Leaked</span>' : '<span class="text-emerald-400">Clean</span>';
+          recText.textContent = "Caution: GPS location safe hai, lekin aapka camera hardware aur shooting date exposed hai jisse OSINT researchers aapke daily habits trace kar sakte hain.";
+        } else {
+          title.textContent = "SAFE / LOW PRIVACY RISK";
+          badge.textContent = "ANONYMIZED / CLEAN";
+          badge.className = "px-3.5 py-1 rounded-full text-xs font-bold tracking-wide border uppercase bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
+          gpsStatus.innerHTML = '<span class="text-emerald-400 font-bold">\u25CF No GPS Coordinates</span>';
+          deviceStatus.innerHTML = '<span class="text-emerald-400 font-bold">\u25CF No Device Fingerprint</span>';
+          timeStatus.innerHTML = '<span class="text-emerald-400 font-bold">\u25CF Stripped Metadata</span>';
+          recText.textContent = "Surakshit: Is image me koi personal identifiable metadata ya location nahi mili. Ye file public sharing ke liye safe hai.";
+        }
+      }
+
+      // ============================================================
+      //  SAMPLE BUTTON — simulated GPS + Camera EXIF
+      // ============================================================
+      sampleExifBtn.addEventListener("click", () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1200;
+        canvas.height = 800;
+        const ctx = canvas.getContext("2d");
+
+        const grad = ctx.createLinearGradient(0, 0, 1200, 800);
+        grad.addColorStop(0, "#0D1322");
+        grad.addColorStop(0.5, "#0A2540");
+        grad.addColorStop(1, "#060911");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1200, 800);
+
+        ctx.fillStyle = "#00F0FF";
+        ctx.font = "bold 38px sans-serif";
+        ctx.fillText("PassGuard Forensic Sample Photo", 80, 200);
+
+        ctx.fillStyle = "#94A3B8";
+        ctx.font = "24px monospace";
+        ctx.fillText("Device: Sony Alpha A7R V \u2022 Lens: FE 24-70mm F2.8 GM II", 80, 260);
+        ctx.fillText("GPS: 28.6139\u00B0 N, 77.2090\u00B0 E (New Delhi, India)", 80, 310);
+        ctx.fillText("Settings: ISO 100 \u2022 f/2.8 \u2022 1/500s \u2022 50mm", 80, 360);
+
+        ctx.strokeStyle = "rgba(0, 240, 255, 0.25)";
+        ctx.lineWidth = 1;
+        for (let x = 0; x < 1200; x += 60) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 800); ctx.stroke();
+        }
+        for (let y = 0; y < 800; y += 60) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1200, y); ctx.stroke();
+        }
+
+        // Show preview
+        previewImg.src = canvas.toDataURL("image/jpeg");
+        document.getElementById("imgDimensionsDisplay").textContent = "1200 \u00D7 800 px";
+        document.getElementById("fileNameDisplay").textContent = "sony_alpha_sample_delhi.jpg";
+        document.getElementById("fileTypeDisplay").textContent = "image/jpeg";
+        document.getElementById("fileSizeBadge").textContent = "1.84 MB";
+        document.getElementById("forensicHash").textContent = "a9b4f28c";
+
+        // Simulated EXIF metadata (canvas blobs have no real EXIF)
+        document.getElementById("metaMake").textContent = "Sony";
+        document.getElementById("metaModel").textContent = "ILCE-7RM5 (A7R V)";
+        document.getElementById("metaSoftware").textContent = "Adobe Lightroom Classic 13.2";
+        document.getElementById("metaLens").textContent = "FE 24-70mm F2.8 GM II";
+        document.getElementById("metaDateOriginal").textContent = "2024-08-14 17:42:19";
+        document.getElementById("metaDateDigitized").textContent = "2024-08-14 17:42:19";
+        document.getElementById("metaDateModified").textContent = "2024-08-15 11:20:05";
+        document.getElementById("metaIso").textContent = "100";
+        document.getElementById("metaAperture").textContent = "f/2.8";
+        document.getElementById("metaShutter").textContent = "1/500s";
+        document.getElementById("metaFocalLength").textContent = "50.0 mm";
+        document.getElementById("metaFlash").textContent = "Off, did not fire";
+        document.getElementById("totalTagsCount").textContent = "28 EXIF Tags Extracted";
+
+        // Real coordinates for India Gate, New Delhi
+        const latDecimal = 28.612912;
+        const lonDecimal = 77.229510;
+
+        document.getElementById("gpsMapSection").classList.remove("hidden");
+        document.getElementById("noGpsCard").classList.add("hidden");
+        document.getElementById("coordsBadge").textContent = `${latDecimal.toFixed(6)}, ${lonDecimal.toFixed(6)}`;
+        document.getElementById("coordsDmsBadge").textContent = `${decimalToDMS(latDecimal, true)}, ${decimalToDMS(lonDecimal, false)}`;
+        document.getElementById("gpsAltitudeText").textContent = "Altitude: 216.4 meters (New Delhi)";
+        document.getElementById("googleMapsLink").href = `https://www.google.com/maps/search/?api=1&query=${latDecimal},${lonDecimal}`;
+        document.getElementById("osmLink").href = `https://www.openstreetmap.org/?mlat=${latDecimal}&mlon=${lonDecimal}#map=18/${latDecimal}/${lonDecimal}`;
+
+        setTimeout(() => {
+          if (currentMap) currentMap.remove();
+          currentMap = L.map("mapContainer").setView([latDecimal, lonDecimal], 18);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "\u00A9 OpenStreetMap contributors"
+          }).addTo(currentMap);
+          currentMarker = L.marker([latDecimal, lonDecimal]).addTo(currentMap);
+          currentMarker.bindPopup("<b>Sony A7R V Sample Location</b><br/>India Gate, Kartavya Path, New Delhi").openPopup();
+          currentMap.invalidateSize();
+        }, 200);
+
+        // REAL reverse geocode from Nominatim API
+        performReverseGeocode(latDecimal, lonDecimal);
+
+        evaluatePrivacyThreat(true, true, true, true, 28);
+
+        currentExtractedData = {
+          investigationDate: new Date().toISOString(),
+          fileInfo: { name: "sony_alpha_sample_delhi.jpg", size: 1928312, type: "image/jpeg", dimensions: "1200x800" },
+          hardware: { make: "Sony", model: "ILCE-7RM5 (A7R V)", software: "Adobe Lightroom Classic 13.2", lensModel: "FE 24-70mm F2.8 GM II" },
+          timestamps: { dateOriginal: "2024-08-14 17:42:19", dateDigitized: "2024-08-14 17:42:19", dateModified: "2024-08-15 11:20:05" },
+          optics: { iso: "100", aperture: "f/2.8", shutter: "1/500s", focalLength: "50.0 mm", flash: "Off, did not fire" },
+          gps: { latitude: latDecimal, longitude: lonDecimal, altitude: "216.4 meters", hasGps: true }
+        };
+
+        rawJsonPre.textContent = JSON.stringify(currentExtractedData, null, 2);
+        resultsDashboard.classList.remove("hidden");
+        showBanner("warning", "Privacy Warning: Physical Coordinates Exposed", `Is sample image me GPS coordinates (${latDecimal.toFixed(6)}, ${lonDecimal.toFixed(6)}) detect hue hain. Interactive map par location dekhein!`);
+        lucide.createIcons();
+      });
+
+      // ---- Download JSON ----
+      downloadJsonBtn.addEventListener("click", () => {
+        if (!currentExtractedData) return;
+        const jsonStr = JSON.stringify(currentExtractedData, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `exif-metadata-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      // ---- Copy Coordinates ----
+      document.getElementById("copyCoordsBtn")?.addEventListener("click", async () => {
+        if (currentExtractedData && currentExtractedData.gps && currentExtractedData.gps.latitude !== null) {
+          const lat = currentExtractedData.gps.latitude;
+          const lon = currentExtractedData.gps.longitude;
+          const text = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+          try {
+            await navigator.clipboard.writeText(text);
+            const btn = document.getElementById("copyCoordsBtn");
+            btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>';
+            lucide.createIcons();
+            setTimeout(() => {
+              btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5 text-amber-400"></i><span>Copy GPS Coordinates</span>';
+              lucide.createIcons();
+            }, 2000);
+          } catch(e) {}
+        }
+      });
+
+      // ============================================================
+      //  Cyber Particle Canvas Animation
+      // ============================================================
+      const cyberCanvas = document.getElementById("cyberCanvas");
+      const cyberCtx = cyberCanvas.getContext("2d");
+      let cw, ch;
+      let particles = [];
+      const particleCount = 45;
+
+      function resize() {
+        cw = cyberCanvas.width = window.innerWidth;
+        ch = cyberCanvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * cw;
+          this.y = Math.random() * ch;
+          this.vx = (Math.random() - 0.5) * 0.45;
+          this.vy = (Math.random() - 0.5) * 0.45;
+          this.radius = Math.random() * 1.5 + 0.8;
+          this.color = Math.random() > 0.4 ? "rgba(0, 240, 255," : "rgba(0, 255, 102,";
+        }
+        update() {
+          this.x += this.vx; this.y += this.vy;
+          if (this.x < 0) this.x = cw;
+          if (this.x > cw) this.x = 0;
+          if (this.y < 0) this.y = ch;
+          if (this.y > ch) this.y = 0;
+        }
+        draw() {
+          cyberCtx.beginPath();
+          cyberCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          cyberCtx.fillStyle = this.color + "0.85)";
+          cyberCtx.fill();
+        }
+      }
+
+      for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+
+      function animate() {
+        cyberCtx.clearRect(0, 0, cw, ch);
+        for (let i = 0; i < particles.length; i++) {
+          particles[i].update();
+          particles[i].draw();
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 110) {
+              cyberCtx.beginPath();
+              cyberCtx.strokeStyle = `rgba(0, 240, 255, ${0.25 * (1 - dist / 110)})`;
+              cyberCtx.lineWidth = 0.6;
+              cyberCtx.moveTo(particles[i].x, particles[i].y);
+              cyberCtx.lineTo(particles[j].x, particles[j].y);
+              cyberCtx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+    });
+  </script>
+
+  <!-- PassBot Sentinel AI Client-Side ChatBot -->
+  <script src="chatbot.js"></script>
+</body>
+</html>

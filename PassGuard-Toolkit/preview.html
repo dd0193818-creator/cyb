@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Password Strength & Security Checker | PassGuard</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Cyber Chatbot Styles & Aesthetic Typography -->
+  <link rel="stylesheet" href="chatbot.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            dark: {
+              950: '#060911',
+              900: '#090D16',
+              850: '#0D1322',
+              800: '#141C2E',
+              700: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #060911;
+      color: #E2E8F0;
+      overflow-x: hidden;
+    }
+    .transition-width {
+      transition: width 0.35s ease, background-color 0.35s ease;
+    }
+    /* Live fighting green warrior animation */
+    @keyframes fighterLiveCombat {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        filter: drop-shadow(0 0 6px rgba(0, 255, 102, 0.5));
+      }
+      30% {
+        transform: translateY(-2px) rotate(-4deg) scale(1.05);
+        filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.7));
+      }
+      50% {
+        transform: translateX(3px) translateY(-1px) rotate(5deg) scale(1.08);
+        filter: drop-shadow(0 0 16px rgba(0, 255, 102, 0.9));
+      }
+      75% {
+        transform: translateY(1px) rotate(-1deg) scale(1.02);
+      }
+    }
+    .fighter-active {
+      animation: fighterLiveCombat 1.6s infinite ease-in-out;
+    }
+    /* Cyber Animated Canvas */
+    #cyberCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -25;
+      pointer-events: none;
+      opacity: 0.65;
+    }
+    /* Dark glass overlay */
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(9, 13, 22, 0.6) 0%, rgba(6, 9, 17, 0.88) 100%);
+      backdrop-blur: 2px;
+      z-index: -20;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500/20 selection:text-blue-300 relative overflow-x-hidden">
+  
+  <!-- 1. Background HTML5 Video (Plays local bg-video.mp4 or chosen user video) -->
+  <video id="bgVideo" autoplay loop muted playsinline webkit-playsinline>
+    <source src="bg-video.mp4" type="video/mp4" />
+  </video>
+
+  <!-- 2. Interactive Animated Cyber Digital Particle Matrix Canvas -->
+  <canvas id="cyberCanvas"></canvas>
+
+  <!-- 3. Dark Glass Overlay (Ensures high contrast & readable text) -->
+  <div class="bg-overlay"></div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-dark-900/85 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-4xl mx-auto px-4 py-2.5 flex items-center justify-between">
+      <a href="preview.html" class="flex items-center gap-3 group">
+        <!-- Live Fighting Logo Arena -->
+        <div class="relative flex items-center gap-1.5 px-2 py-1 rounded-xl bg-dark-850 border border-cyan-500/40 shadow-[0_0_15px_rgba(0,240,255,0.25)] overflow-hidden">
+          <!-- Live Bug Enemy (Flinches & Attacks) -->
+          <div class="bug-active w-4 h-4 rounded bg-amber-500/90 border border-amber-300 flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(245,158,11,0.8)]">
+            👾
+          </div>
+
+          <!-- Live Clash Spark -->
+          <div class="clash-active absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs pointer-events-none text-cyan-300">
+            ⚡
+          </div>
+
+          <!-- Hero Robot Warrior Fighter Logo -->
+          <img
+            src="logo.png"
+            alt="Cyber Defender"
+            class="fighter-active w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_0_10px_rgba(0,255,102,0.6)]"
+          />
+        </div>
+
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-bold text-slate-100 text-sm tracking-tight">PassGuard</span>
+            <span class="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 animate-pulse">
+              FIGHTING LIVE
+            </span>
+          </div>
+          <span class="text-[10px] text-slate-400 block -mt-0.5">Mecha Cyber Defense</span>
+        </div>
+      </a>
+
+      <!-- Right Nav: Tabs + Video Picker -->
+      <div class="flex items-center gap-2">
+        <!-- Choose Video File Button -->
+        <label
+          for="videoFileInput"
+          title="Apna video background me lagayein"
+          class="cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-dark-850 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition-all text-[11px] sm:text-xs"
+        >
+          <i data-lucide="video" class="w-3.5 h-3.5 text-blue-400"></i>
+          <span class="hidden sm:inline">Set Custom Video</span>
+          <span class="sm:hidden">Video</span>
+        </label>
+        <input id="videoFileInput" type="file" accept="video/*" class="hidden" />
+
+        <!-- Navigation Tabs (5 Features) -->
+        <div class="flex items-center gap-1 bg-dark-850 border border-slate-800 p-1 rounded-xl text-xs">
+          <span class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30 text-[11px] sm:text-xs">
+            Password
+          </span>
+          <a href="breach-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+            Breach
+          </a>
+          <a href="phishing-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+            Phishing
+          </a>
+          <a href="exif-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs flex items-center gap-1">
+            <i data-lucide="camera" class="w-3.5 h-3.5 text-blue-400"></i>
+            EXIF
+          </a>
+          <a href="chat-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs flex items-center gap-1">
+            <i data-lucide="bot" class="w-3.5 h-3.5 text-cyan-400"></i>
+            Chatbot
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-2xl mx-auto px-3.5 sm:px-4 py-6 sm:py-10 w-full space-y-5 sm:space-y-6 relative z-10">
+    
+    <!-- Title Section -->
+    <div class="text-center space-y-1.5 sm:space-y-2">
+      <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+        Password Strength Checker
+      </h1>
+      <p class="text-slate-300 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+        Apne password ki security live check karein aur jaanein use crack karne me kitna time lagega.
+      </p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-dark-850/85 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-4 sm:p-7 shadow-2xl space-y-5 sm:space-y-6">
+      
+      <!-- Input Field -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <label for="passwordInput" class="font-medium text-slate-200">
+            Password daalein
+          </label>
+          <span id="charCount" class="text-slate-400">0 characters</span>
+        </div>
+
+        <div class="relative flex items-center">
+          <input
+            id="passwordInput"
+            type="password"
+            placeholder="Yahan type karein..."
+            autocomplete="off"
+            spellcheck="false"
+            class="w-full rounded-xl bg-dark-900/90 border border-slate-700/80 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 text-white placeholder-slate-500 px-3.5 sm:px-4 py-3 sm:py-3.5 pr-28 text-sm sm:text-base outline-none transition-all"
+          />
+
+          <!-- Action buttons inside input -->
+          <div class="absolute right-2 flex items-center gap-0.5 sm:gap-1">
+            <!-- Show/Hide Toggle -->
+            <button
+              id="toggleVisibilityBtn"
+              type="button"
+              title="Show/Hide"
+              class="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+            >
+              <i data-lucide="eye" id="toggleEyeIcon" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Copy Button -->
+            <button
+              id="copyBtn"
+              type="button"
+              title="Copy"
+              class="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-colors"
+            >
+              <i data-lucide="copy" id="copyIcon" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Clear Button -->
+            <button
+              id="clearBtn"
+              type="button"
+              title="Clear"
+              class="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+            >
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Generate Button -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <button
+            id="generateBtn"
+            type="button"
+            class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            Strong Password Suggest Karein
+          </button>
+          <span class="text-[11px] text-slate-400">100% Client-Side Privacy</span>
+        </div>
+      </div>
+
+      <!-- Strength Meter Bar -->
+      <div class="space-y-2 pt-1 border-t border-slate-800/80">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-medium">Strength:</span>
+          <span id="strengthLabel" class="font-semibold text-slate-400">
+            Kuch type karein
+          </span>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-800/80 rounded-full h-2.5 overflow-hidden p-0.5">
+          <div
+            id="strengthProgressBar"
+            class="h-full rounded-full transition-width w-0 bg-slate-600"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Cracking Time Estimation Box -->
+      <div class="rounded-xl bg-dark-900/90 border border-slate-800 p-3.5 sm:p-5 flex items-center justify-between gap-3 sm:gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-1.5 text-xs font-medium text-slate-400">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-blue-400"></i>
+            Crack karne me lagne wala time
+          </div>
+          <div id="crackTimeResult" class="text-lg sm:text-2xl font-bold text-white">
+            —
+          </div>
+          <p id="crackTimeNote" class="text-[11px] sm:text-xs text-slate-400">
+            Password daalne par estimate calculate hoga.
+          </p>
+        </div>
+
+        <div id="riskBadge" class="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400">
+          Waiting
+        </div>
+      </div>
+
+      <!-- Heuristic Checklist -->
+      <div class="space-y-2.5 pt-1 border-t border-slate-800/80">
+        <div class="text-xs font-semibold text-slate-300">
+          Password Requirements:
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          
+          <!-- 1. Length -->
+          <div id="req-length" class="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-lg bg-dark-900/80 border border-slate-800/80 text-slate-400 transition-colors">
+            <span class="req-icon flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-slate-800 text-slate-500">
+              ●
+            </span>
+            <span>Kam se kam 8 characters</span>
+          </div>
+
+          <!-- 2. Uppercase -->
+          <div id="req-uppercase" class="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-lg bg-dark-900/80 border border-slate-800/80 text-slate-400 transition-colors">
+            <span class="req-icon flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-slate-800 text-slate-500">
+              ●
+            </span>
+            <span>Uppercase letter (A-Z)</span>
+          </div>
+
+          <!-- 3. Lowercase -->
+          <div id="req-lowercase" class="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-lg bg-dark-900/80 border border-slate-800/80 text-slate-400 transition-colors">
+            <span class="req-icon flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-slate-800 text-slate-500">
+              ●
+            </span>
+            <span>Lowercase letter (a-z)</span>
+          </div>
+
+          <!-- 4. Numbers -->
+          <div id="req-number" class="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-lg bg-dark-900/80 border border-slate-800/80 text-slate-400 transition-colors">
+            <span class="req-icon flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-slate-800 text-slate-500">
+              ●
+            </span>
+            <span>Number (0-9)</span>
+          </div>
+
+          <!-- 5. Symbols -->
+          <div id="req-symbol" class="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-lg bg-dark-900/80 border border-slate-800/80 text-slate-400 transition-colors">
+            <span class="req-icon flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-slate-800 text-slate-500">
+              ●
+            </span>
+            <span>Special symbol (!@#$%^&*)</span>
+          </div>
+
+          <!-- 6. Common/Breached -->
+          <div id="req-common" class="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-lg bg-dark-900/80 border border-slate-800/80 text-slate-400 transition-colors">
+            <span class="req-icon flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-slate-800 text-slate-500">
+              ●
+            </span>
+            <span id="commonText">Common password nahi hona chahiye</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Clean Footer -->
+  <footer class="border-t border-slate-800/80 py-4 sm:py-5 text-center text-xs text-slate-400 relative z-10 bg-dark-900/80 backdrop-blur-md">
+    <p>100% Client-Side Privacy: Password aapke browser se bahar kahin nahi jaata.</p>
+  </footer>
+
+  <!-- Script with clean logic -->
+  <script>
+    /**
+     * Initializes the high-performance animated cyber digital particle network canvas.
+     */
+    function initCyberCanvas() {
+      const canvas = document.getElementById("cyberCanvas");
+      const ctx = canvas.getContext("2d");
+      let w, h;
+      let particles = [];
+      const particleCount = window.innerWidth < 640 ? 35 : 70;
+
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * w;
+          this.y = Math.random() * h;
+          this.vx = (Math.random() - 0.5) * 0.8;
+          this.vy = (Math.random() - 0.5) * 0.8;
+          this.radius = Math.random() * 2 + 1;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0) this.x = w;
+          if (this.x > w) this.x = 0;
+          if (this.y < 0) this.y = h;
+          if (this.y > h) this.y = 0;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(0, 240, 255, 0.7)";
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = "#00f0ff";
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, w, h);
+
+        // Draw connections
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(0, 240, 255, ${0.25 * (1 - dist / 120)})`;
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Draw & update particles
+        particles.forEach(p => {
+          p.update();
+          p.draw();
+        });
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    /**
+     * Top common breached passwords list.
+     */
+    const COMMON_PASSWORDS = new Set([
+      "123456", "password", "12345678", "qwerty", "123456789", "12345", "1234", "111111",
+      "1234567", "dragon", "123123", "baseball", "football", "monkey", "letmein", "shadow",
+      "master", "superman", "killer", "trustno1", "password1", "password123", "admin", "welcome",
+      "login", "root", "toor", "pass", "secret", "default", "guest", "access", "iloveyou",
+      "starwars", "pokemon", "princess", "cookie", "sunshine", "charlie", "hunter2", "batman",
+      "testing", "system", "administrator", "computer", "qwertz", "azerty", "asdfgh", "zxcvbnm",
+      "hello123", "liverpool", "arsenal", "chelsea", "manchester", "barcelona", "realmadrid",
+      "test123", "changeme", "ninja", "mustang", "michael", "jessica", "jordan", "matrix",
+      "server", "hacker", "network", "firewall", "cyber", "security", "telemetry", "socadmin"
+    ]);
+
+    /**
+     * Checks if password is common/breached.
+     */
+    function isCommon(pwd) {
+      if (!pwd) return false;
+      return COMMON_PASSWORDS.has(pwd.trim().toLowerCase());
+    }
+
+    /**
+     * Formats seconds into simple clean words.
+     */
+    function formatTime(seconds) {
+      if (!isFinite(seconds) || seconds > 3.154e15) return "Centuries (Millions of years)";
+      if (seconds < 1) return "Instant (< 1 sec)";
+      if (seconds < 60) return `${Math.round(seconds)} seconds`;
+      const mins = seconds / 60;
+      if (mins < 60) return `approx ${Math.round(mins)} minutes`;
+      const hrs = mins / 60;
+      if (hrs < 24) return `approx ${Math.round(hrs)} hours`;
+      const days = hrs / 24;
+      if (days < 30) return `approx ${Math.round(days)} days`;
+      const months = days / 30.44;
+      if (months < 12) return `approx ${Math.round(months)} months`;
+      const years = days / 365.25;
+      if (years < 100) return `approx ${Math.round(years)} years`;
+      if (years < 1000000) return `approx ${Math.round(years).toLocaleString()} years`;
+      return "Centuries";
+    }
+
+    /**
+     * Generates a 16-char strong random password.
+     */
+    function generateStrongPassword() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*()_+~";
+      const array = new Uint32Array(16);
+      window.crypto.getRandomValues(array);
+      return Array.from(array, num => chars[num % chars.length]).join("");
+    }
+
+    /**
+     * Updates one requirement card state cleanly.
+     */
+    function setRequirement(id, passed, isBreached = false) {
+      const row = document.getElementById(`req-${id}`);
+      const icon = row.querySelector(".req-icon");
+
+      if (passed) {
+        row.className = "flex items-center gap-2.5 p-2 sm:p-2.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 transition-colors";
+        icon.className = "req-icon flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-emerald-500 text-dark-900 font-bold";
+        icon.textContent = "✓";
+      } else if (isBreached) {
+        row.className = "flex items-center gap-2.5 p-2 sm:p-2.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 transition-colors";
+        icon.className = "req-icon flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-rose-500 text-white font-bold";
+        icon.textContent = "✕";
+      } else {
+        row.className = "flex items-center gap-2.5 p-2 sm:p-2.5 rounded-lg bg-dark-900/80 border border-slate-800/80 text-slate-400 transition-colors";
+        icon.className = "req-icon flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-slate-800 text-slate-500";
+        icon.textContent = "●";
+      }
+    }
+
+    /**
+     * Main analysis calculation.
+     */
+    function analyze() {
+      const input = document.getElementById("passwordInput");
+      const pwd = input.value;
+      const len = pwd.length;
+
+      document.getElementById("charCount").textContent = `${len} character${len === 1 ? '' : 's'}`;
+
+      const hasMinLength = len >= 8;
+      const hasUpper = /[A-Z]/.test(pwd);
+      const hasLower = /[a-z]/.test(pwd);
+      const hasNumber = /[0-9]/.test(pwd);
+      const hasSymbol = /[^a-zA-Z0-9]/.test(pwd);
+      const breached = isCommon(pwd);
+      const isNotCommon = !breached && len > 0;
+
+      // Update Checklist
+      setRequirement("length", hasMinLength);
+      setRequirement("uppercase", hasUpper);
+      setRequirement("lowercase", hasLower);
+      setRequirement("number", hasNumber);
+      setRequirement("symbol", hasSymbol);
+      setRequirement("common", isNotCommon, breached && len > 0);
+
+      const commonText = document.getElementById("commonText");
+      if (breached && len > 0) {
+        commonText.textContent = "Breached / Common password hai!";
+      } else {
+        commonText.textContent = "Common password nahi hona chahiye";
+      }
+
+      // Calculate Charset Pool Size
+      let pool = 0;
+      if (hasLower) pool += 26;
+      if (hasUpper) pool += 26;
+      if (hasNumber) pool += 10;
+      if (hasSymbol) pool += 33;
+
+      // Entropy & Combinations
+      const entropy = pool > 0 && len > 0 ? len * (Math.log(pool) / Math.log(2)) : 0;
+      const combinations = pool > 0 && len > 0 ? Math.pow(pool, Math.min(len, 40)) : 0;
+
+      // Elements
+      const progressBar = document.getElementById("strengthProgressBar");
+      const label = document.getElementById("strengthLabel");
+      const crackTimeResult = document.getElementById("crackTimeResult");
+      const crackTimeNote = document.getElementById("crackTimeNote");
+      const riskBadge = document.getElementById("riskBadge");
+
+      if (len === 0) {
+        progressBar.style.width = "0%";
+        progressBar.className = "h-full rounded-full transition-width w-0 bg-slate-600";
+        label.textContent = "Kuch type karein";
+        label.className = "font-semibold text-slate-400";
+        crackTimeResult.textContent = "—";
+        crackTimeNote.textContent = "Password daalne par estimate calculate hoga.";
+        riskBadge.className = "hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400";
+        riskBadge.textContent = "Waiting";
+        return;
+      }
+
+      // Strength tiers
+      if (breached) {
+        progressBar.style.width = "15%";
+        progressBar.className = "h-full rounded-full transition-width bg-rose-500 shadow-sm";
+        label.textContent = "Weak (Common password)";
+        label.className = "font-semibold text-rose-400";
+        crackTimeResult.textContent = "Instant (< 1 sec)";
+        crackTimeNote.textContent = "Ye password hacker dictionary mein maujood hai.";
+        riskBadge.className = "hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-400";
+        riskBadge.textContent = "Very Weak";
+      } else if (entropy < 30 || len < 7) {
+        progressBar.style.width = "25%";
+        progressBar.className = "h-full rounded-full transition-width bg-rose-500";
+        label.textContent = "Weak";
+        label.className = "font-semibold text-rose-400";
+        const secs = (combinations / 2) / 1e11;
+        crackTimeResult.textContent = formatTime(secs);
+        crackTimeNote.textContent = "Aam computer se bhi asaani se crack ho sakta hai.";
+        riskBadge.className = "hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-400";
+        riskBadge.textContent = "Weak";
+      } else if (entropy < 55 || len < 10) {
+        progressBar.style.width = "55%";
+        progressBar.className = "h-full rounded-full transition-width bg-amber-500";
+        label.textContent = "Medium";
+        label.className = "font-semibold text-amber-400";
+        const secs = (combinations / 2) / 1e11;
+        crackTimeResult.textContent = formatTime(secs);
+        crackTimeNote.textContent = "Basic attacks se safe hai, lekin aur lamba hona chahiye.";
+        riskBadge.className = "hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-400";
+        riskBadge.textContent = "Medium";
+      } else if (entropy < 75 || len < 14) {
+        progressBar.style.width = "80%";
+        progressBar.className = "h-full rounded-full transition-width bg-emerald-500";
+        label.textContent = "Strong";
+        label.className = "font-semibold text-emerald-400";
+        const secs = (combinations / 2) / 1e11;
+        crackTimeResult.textContent = formatTime(secs);
+        crackTimeNote.textContent = "Kaafi mazboot password hai. Brute force impossible hai.";
+        riskBadge.className = "hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400";
+        riskBadge.textContent = "Strong";
+      } else {
+        progressBar.style.width = "100%";
+        progressBar.className = "h-full rounded-full transition-width bg-emerald-400 shadow-sm";
+        label.textContent = "Very Strong";
+        label.className = "font-semibold text-emerald-300";
+        const secs = (combinations / 2) / 1e11;
+        crackTimeResult.textContent = formatTime(secs);
+        crackTimeNote.textContent = "Supercomputer se bhi crack karne me sadiyan lag jayengi.";
+        riskBadge.className = "hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300";
+        riskBadge.textContent = "Very Strong";
+      }
+    }
+
+    // Event listeners
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      initCyberCanvas();
+
+      const input = document.getElementById("passwordInput");
+      input.addEventListener("input", analyze);
+
+      // Custom Video File Upload handler
+      const videoInput = document.getElementById("videoFileInput");
+      const bgVideo = document.getElementById("bgVideo");
+      videoInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const videoURL = URL.createObjectURL(file);
+          bgVideo.src = videoURL;
+          bgVideo.play();
+        }
+      });
+
+      // Show/Hide Toggle
+      const toggleBtn = document.getElementById("toggleVisibilityBtn");
+      toggleBtn.addEventListener("click", () => {
+        const isPwd = input.type === "password";
+        input.type = isPwd ? "text" : "password";
+        document.getElementById("toggleEyeIcon").setAttribute("data-lucide", isPwd ? "eye-off" : "eye");
+        lucide.createIcons();
+      });
+
+      // Clear Button
+      document.getElementById("clearBtn").addEventListener("click", () => {
+        input.value = "";
+        analyze();
+      });
+
+      // Generate Button
+      document.getElementById("generateBtn").addEventListener("click", () => {
+        input.value = generateStrongPassword();
+        analyze();
+      });
+
+      // Copy Button
+      document.getElementById("copyBtn").addEventListener("click", async () => {
+        if (!input.value) return;
+        try {
+          await navigator.clipboard.writeText(input.value);
+          const icon = document.getElementById("copyIcon");
+          icon.setAttribute("data-lucide", "check");
+          icon.classList.add("text-emerald-400");
+          lucide.createIcons();
+          setTimeout(() => {
+            icon.setAttribute("data-lucide", "copy");
+            icon.classList.remove("text-emerald-400");
+            lucide.createIcons();
+          }, 2000);
+        } catch(e) {}
+      });
+    });
+  </script>
+  <!-- PassBot Sentinel AI Client-Side ChatBot -->
+  <script src="chatbot.js"></script>
+</body>
+</html>

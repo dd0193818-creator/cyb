@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Sentinel AI Cyber ChatBot | PassGuard</title>
+  
+  <!-- Inter & Plus Jakarta Sans & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Chatbot Styles -->
+  <link rel="stylesheet" href="chatbot.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            dark: {
+              950: '#060911',
+              900: '#090D16',
+              850: '#0D1322',
+              800: '#141C2E',
+              700: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: #060911;
+      color: #E2E8F0;
+      overflow-x: hidden;
+    }
+    /* Live fighting green warrior animation */
+    @keyframes fighterLiveCombat {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        filter: drop-shadow(0 0 6px rgba(0, 255, 102, 0.5));
+      }
+      30% {
+        transform: translateY(-2px) rotate(-4deg) scale(1.05);
+        filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.7));
+      }
+      50% {
+        transform: translateX(3px) translateY(-1px) rotate(5deg) scale(1.08);
+        filter: drop-shadow(0 0 16px rgba(0, 255, 102, 0.9));
+      }
+      75% {
+        transform: translateY(1px) rotate(-1deg) scale(1.02);
+      }
+    }
+    .fighter-active {
+      animation: fighterLiveCombat 1.6s infinite ease-in-out;
+    }
+    #cyberCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -25;
+      pointer-events: none;
+      opacity: 0.65;
+    }
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(9, 13, 22, 0.65) 0%, rgba(6, 9, 17, 0.92) 100%);
+      backdrop-blur: 2px;
+      z-index: -20;
+      pointer-events: none;
+    }
+    video#bgVideo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      opacity: 0.35;
+      z-index: -30;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500/20 selection:text-blue-300 relative overflow-x-hidden">
+
+  <!-- 1. Background Video -->
+  <video id="bgVideo" autoplay loop muted playsinline webkit-playsinline>
+    <source src="bg-video.mp4" type="video/mp4" />
+  </video>
+
+  <!-- 2. Cyber Canvas -->
+  <canvas id="cyberCanvas"></canvas>
+
+  <!-- 3. Dark Overlay -->
+  <div class="bg-overlay"></div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-dark-900/85 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between">
+      <a href="preview.html" class="flex items-center gap-2.5 group">
+        <!-- Live Fighting Logo Arena -->
+        <div class="relative flex items-center gap-1.5 px-2 py-1 rounded-xl bg-dark-850 border border-cyan-500/40 shadow-[0_0_15px_rgba(0,240,255,0.25)] overflow-hidden">
+          <div class="bug-active w-4 h-4 rounded bg-amber-500/90 border border-amber-300 flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(245,158,11,0.8)]">
+            👾
+          </div>
+          <div class="clash-active absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs pointer-events-none text-cyan-300">
+            ⚡
+          </div>
+          <img
+            src="logo.png"
+            alt="Cyber Defender"
+            class="fighter-active w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_0_10px_rgba(0,255,102,0.6)]"
+          />
+        </div>
+
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-bold text-slate-100 text-sm tracking-tight">PassGuard</span>
+            <span class="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 animate-pulse">
+              FIGHTING LIVE
+            </span>
+          </div>
+          <span class="text-[10px] text-slate-400 block -mt-0.5">Mecha Cyber Defense</span>
+        </div>
+      </a>
+
+      <!-- 5 Navigation Tabs -->
+      <div class="flex items-center gap-1 bg-dark-850 border border-slate-800 p-1 rounded-xl text-xs">
+        <a href="preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+          Password
+        </a>
+        <a href="breach-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+          Breach
+        </a>
+        <a href="phishing-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+          Phishing
+        </a>
+        <a href="exif-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs flex items-center gap-1">
+          <i data-lucide="camera" class="w-3.5 h-3.5 text-blue-400"></i>
+          EXIF
+        </a>
+        <span class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30 text-[11px] sm:text-xs flex items-center gap-1">
+          <i data-lucide="bot" class="w-3.5 h-3.5 text-cyan-400"></i>
+          AI Chatbot
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Chat Section -->
+  <main class="max-w-4xl mx-auto px-3.5 sm:px-4 py-6 w-full flex-1 flex flex-col relative z-10">
+    
+    <!-- Title Card -->
+    <div class="text-center space-y-1 mb-4">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-medium">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        Sentinel AI • 100% Client-Side Cyber Engine
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+        PassGuard Cyber AI Chatbot
+      </h1>
+      <p class="text-slate-400 text-xs sm:text-sm max-w-lg mx-auto">
+        Basic se Advanced cybersecurity questions ka instant reply paayein (Hindi, English & Hinglish mein).
+      </p>
+    </div>
+
+    <!-- Chat Card Container -->
+    <div class="bg-dark-850/90 backdrop-blur-xl border border-slate-700/60 rounded-2xl flex-1 flex flex-col shadow-2xl overflow-hidden min-h-[500px] max-h-[640px]">
+      
+      <!-- Chat Header -->
+      <div class="px-4 py-3 bg-dark-900/90 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center">
+            <img src="logo.png" alt="Bot" class="w-5 h-5 object-contain drop-shadow" />
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+              Sentinel Assistant
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ONLINE</span>
+            </h3>
+            <span class="text-[10px] text-slate-400">Ask anything about passwords, leaks, or phishing</span>
+          </div>
+        </div>
+
+        <button id="clearChatBtn" class="text-xs text-slate-400 hover:text-rose-400 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-dark-800 border border-slate-700/60 transition-colors">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          Clear Chat
+        </button>
+      </div>
+
+      <!-- Quick Suggestion Chips -->
+      <div class="px-4 py-2.5 bg-dark-950/70 border-b border-slate-800/80 flex items-center gap-2 overflow-x-auto text-xs scrollbar-none">
+        <span class="text-[11px] text-slate-400 font-medium shrink-0">Quick Topics:</span>
+        <button class="passbot-chip" data-query="Strong password banane ke golden rules kya hain?">🛡️ Strong Password</button>
+        <button class="passbot-chip" data-query="Phishing email aur fake link kaise pehchane?">🎣 Phishing Detection</button>
+        <button class="passbot-chip" data-query="Email data breach check kaise kaam karta hai?">🚨 Breach & HIBP</button>
+        <button class="passbot-chip" data-query="2FA aur Authenticator app kyun zaroori hai?">🔐 2FA / OTP Safety</button>
+        <button class="passbot-chip" data-query="Bcrypt, Argon2 aur Salted Hashing explain karo">⚡ Salted Hashing (Adv)</button>
+        <button class="passbot-chip" data-query="Brute force vs Dictionary attacks kya hote hain?">⚔️ Cyber Attacks (Adv)</button>
+      </div>
+
+      <!-- Messages Stream -->
+      <div id="fullChatMessages" class="flex-1 p-4 overflow-y-auto space-y-3.5 scroll-smooth">
+        <!-- Initial Bot Greeting -->
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-full bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center shrink-0">
+            <img src="logo.png" class="w-4 h-4 object-contain" />
+          </div>
+          <div class="max-w-[85%] bg-dark-800/90 border border-slate-700/70 text-slate-200 text-xs sm:text-sm p-3.5 rounded-2xl rounded-tl-sm leading-relaxed shadow-lg">
+            <span class="font-bold text-white">Namaste! Main PassGuard Sentinel AI hoon.</span> 🤖⚡<br/><br/>
+            Cybersecurity, Password strength, Data Breaches, ya Phishing scams ke baare me koi bhi basic ya advanced sawaal puchein. Aap Hindi ya English dono me pooch sakte hain!
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Footer -->
+      <div class="p-3 bg-dark-900/95 border-t border-slate-800">
+        <form id="fullChatForm" class="flex gap-2">
+          <input
+            id="fullChatInput"
+            type="text"
+            placeholder="Apna sawaal likhein... (e.g., Password crack time kaise nikalte hain?)"
+            class="flex-1 bg-dark-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+          />
+          <button
+            type="submit"
+            class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm flex items-center gap-1.5 transition-all shadow-lg shadow-blue-600/25 shrink-0"
+          >
+            <span>Bhejein</span>
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Clean Footer -->
+  <footer class="border-t border-slate-800/80 py-4 text-center text-xs text-slate-400 relative z-10 bg-dark-900/80 backdrop-blur-md">
+    <p>100% Client-Side Privacy: Chats aapke browser mein evaluate hoti hain, server par store nahi hoti.</p>
+  </footer>
+
+  <script>
+    // Knowledge Base
+    const KNOWLEDGE_BASE = [
+      {
+        keywords: ["hi", "hello", "hey", "namaste", "pranam", "kese ho", "kaise ho", "kya hal", "halo"],
+        reply: "Namaste! Main Sentinel Cyber AI hoon. 🤖⚡\\nAap mujhse cybersecurity, strong passwords, email breach checks ya phishing scams ke baare me koi bhi question puch sakte hain. Hindi, English ya Hinglish me baat karein!"
+      },
+      {
+        keywords: ["who are you", "kaun ho", "kon ho", "tera naam", "what do you do", "kya karte ho", "about"],
+        reply: "Main **PassGuard Sentinel AI** hoon — ek live client-side cybersecurity assistant! 🛡️\\n\\nMera kaam hai:\\n• Password security & crack time explain karna\\n• HIBP email leak check samjhana\\n• Phishing emails ke fake links & urgent scams detect karna\\n• Advanced cryptography (Argon2, Salted Hashing, 2FA) sikhana!"
+      },
+      {
+        keywords: ["password strong", "strong password", "password tips", "password kaise banaye", "safe password", "acha password", "good password", "golden rules"],
+        reply: "🔑 **Strong Password Banane ke 5 Golden Rules:**\\n\\n1. **Length matters most:** Kam se kam **14-16 characters** ka password rakhein.\\n2. **Passphrase use karein:** 3-4 random unassociated words jodein (e.g. <span class='cyber-highlight'>Blue#Tiger94!Mango</span>).\\n3. **Mix characters:** Uppercase, lowercase, numbers aur symbols ka balance rakhein.\\n4. **Never reuse:** Har account ka alag password rakhein aur **Password Manager** use karein.\\n5. **Personal info avoid karein:** Apna naam, bike number ya DOB kabhi password me na daalein."
+      },
+      {
+        keywords: ["crack time", "entropy", "kitna time", "time to crack", "brute force time"],
+        reply: "⚡ **Password Crack Time calculation:**\\n\\nYe **Information Entropy ($H$)** par depend karta hai:\\n<div class='cyber-code-box'>Entropy = L × log2(N)</div>\\n• $L$ = Length, $N$ = Character pool size.\\nModern RTX 4090 GPUs 1 second me **100 Billion hashes** guess kar sakti hain! 8 characters ka password <span class='cyber-highlight'>kuch minutes</span> me crack ho jayega, jabki 14+ characters ko crack karne me **lakhon saal** lagte hain."
+      },
+      {
+        keywords: ["breach", "email leak", "have i been pwned", "hibp", "data breach", "leak check", "email check"],
+        reply: "🚨 **Email Breach ka matlab kya hota hai?**\\n\\nJab koi company hack hoti hai, to database hackers leak kar dete hain.\\n\\n**PassGuard kaise check karta hai?**\\nYe **HIBP API** aur **K-Anonymity Model** use karta hai — jisme aapka pura password ya email kabhi expose nahi hota. Agar aapka email breached hai, to turant password badlein aur **2FA enable karein**!"
+      },
+      {
+        keywords: ["phishing", "phishing kya hai", "what is phishing", "fake email", "scam email", "fraud email", "fake link"],
+        reply: "🎣 **Phishing Email Pehchanne ke Top Signs:**\\n\\n1. **Urgency & Threats:** *'Account 24 ghante me suspend ho jayega!'*\\n2. **Mismatched Domain:** Sender name PayPal likha hoga par email <span class='cyber-highlight'>service@paypa1-security.xyz</span> jaisa hoga.\\n3. **Suspicious Attachments:** Invoice ke naam par **.zip, .exe, .scr** file bhejna.\\n4. **Generic Greetings:** *'Dear Customer'* likhna bina aapke naam ke.\\n5. **Fake Links:** Hamesha link par hover karke real domain verify karein!"
+      },
+      {
+        keywords: ["2fa", "two factor", "mfa", "authenticator", "otp", "two step", "google authenticator"],
+        reply: "🔐 **2FA (Two-Factor Authentication) kyun zaroori hai?**\\n\\n2FA me 2 layers hoti hain: Password (Something you know) + Authenticator Code (Something you have).\\n\\n💡 **Pro Tip:** SMS OTP se behtar **Authenticator App (TOTP)** (Google Authenticator / Aegis) use karein kyunki SMS OTP **SIM Swap Attack** se hack ho sakta hai!"
+      },
+      {
+        keywords: ["hash", "hashing", "bcrypt", "argon2", "salt", "salted hash", "sha256", "md5"],
+        reply: "🛡️ **Advanced: Salted Hashing & Modern Cryptography**\\n\\n• **Plain Hash vs Salted Hash:** Agar salt na ho to Rainbow table se attack aasan hota hai. **Salt** ek random string hoti hai jo har password ke sath judti hai.\\n• **Best Algorithms:**\\n- ❌ MD5 & SHA-1: Broken\\n- ⚠️ SHA-256: Fast for signatures, but too fast for passwords\\n- ✅ **Argon2id & bcrypt:** Memory-hard algorithms jo GPU brute-force ko slow kar dete hain."
+      },
+      {
+        keywords: ["brute force", "dictionary attack", "rainbow table", "credential stuffing"],
+        reply: "⚔️ **Cyber Attack Types (Advanced):**\\n\\n1. **Brute Force:** Sabhi possible letter combinations try karna.\\n2. **Dictionary Attack:** Common leaked wordlists (RockYou.txt) use karna.\\n3. **Credential Stuffing:** Ek hacked site se mile email/passwords ko dusri sites par automated bot se try karna.\\n4. **Rainbow Table:** Pre-computed hashes ka lookup table."
+      }
+    ];
+
+    function formatMd(text) {
+      return text
+        .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
+        .replace(/\\*(.*?)\\*/g, '<em>$1</em>')
+        .replace(/\\n/g, '<br/>');
+    }
+
+    function getBotReply(input) {
+      const q = input.toLowerCase().trim();
+      for (const item of KNOWLEDGE_BASE) {
+        for (const kw of item.keywords) {
+          if (q.includes(kw)) {
+            return item.reply;
+          }
+        }
+      }
+      return "Main aapke is sawaal par cybersecurity point of view se help kar sakta hoon! 🤖\\n\\nAap chahein to:\\n• 🛡️ **Password Checker** tab me password test karein\\n• 🚨 **Breach Check** me email leak dekhein\\n• 🎣 **Phishing Check** me email inspect karein\\n\\nYa fir puchein: *'Strong password kaise banayein?'* ya *'Phishing kaise pehchane?'*";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+
+      const messagesContainer = document.getElementById("fullChatMessages");
+      const form = document.getElementById("fullChatForm");
+      const input = document.getElementById("fullChatInput");
+      const clearBtn = document.getElementById("clearChatBtn");
+
+      function addMessage(text, sender) {
+        const div = document.createElement("div");
+        div.className = sender === "user" ? "flex items-start justify-end gap-2.5" : "flex items-start gap-2.5";
+
+        if (sender === "user") {
+          div.innerHTML = `
+            <div class="max-w-[85%] bg-blue-600 text-white text-xs sm:text-sm p-3.5 rounded-2xl rounded-tr-sm leading-relaxed shadow-lg border border-blue-400/30">
+              ${formatMd(text)}
+            </div>
+          `;
+        } else {
+          div.innerHTML = `
+            <div class="w-7 h-7 rounded-full bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center shrink-0">
+              <img src="logo.png" class="w-4 h-4 object-contain" />
+            </div>
+            <div class="max-w-[85%] bg-dark-800/90 border border-slate-700/70 text-slate-200 text-xs sm:text-sm p-3.5 rounded-2xl rounded-tl-sm leading-relaxed shadow-lg">
+              ${formatMd(text)}
+            </div>
+          `;
+        }
+        messagesContainer.appendChild(div);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      function showTyping() {
+        const typing = document.createElement("div");
+        typing.id = "pageTyping";
+        typing.className = "flex items-start gap-2.5";
+        typing.innerHTML = `
+          <div class="w-7 h-7 rounded-full bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center shrink-0">
+            <img src="logo.png" class="w-4 h-4 object-contain" />
+          </div>
+          <div class="passbot-typing">
+            <span></span><span></span><span></span>
+          </div>
+        `;
+        messagesContainer.appendChild(typing);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      function hideTyping() {
+        document.getElementById("pageTyping")?.remove();
+      }
+
+      function handleQuery(query) {
+        if (!query.trim()) return;
+        addMessage(query, "user");
+        showTyping();
+
+        setTimeout(() => {
+          hideTyping();
+          const reply = getBotReply(query);
+          addMessage(reply, "bot");
+          lucide.createIcons();
+        }, 500);
+      }
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = "";
+        handleQuery(text);
+      });
+
+      document.querySelectorAll(".passbot-chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const q = btn.dataset.query;
+          if (q) handleQuery(q);
+        });
+      });
+
+      clearBtn.addEventListener("click", () => {
+        messagesContainer.innerHTML = `
+          <div class="flex items-start gap-2.5">
+            <div class="w-7 h-7 rounded-full bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center shrink-0">
+              <img src="logo.png" class="w-4 h-4 object-contain" />
+            </div>
+            <div class="max-w-[85%] bg-dark-800/90 border border-slate-700/70 text-slate-200 text-xs sm:text-sm p-3.5 rounded-2xl rounded-tl-sm leading-relaxed shadow-lg">
+              Chat clear ho gaya. Aap naya sawaal pooch sakte hain! 🛡️⚡
+            </div>
+          </div>
+        `;
+      });
+
+      // Canvas particles
+      const canvas = document.getElementById("cyberCanvas");
+      const ctx = canvas.getContext("2d");
+      let w, h;
+      let particles = [];
+      const particleCount = 45;
+
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * w;
+          this.y = Math.random() * h;
+          this.vx = (Math.random() - 0.5) * 0.45;
+          this.vy = (Math.random() - 0.5) * 0.45;
+          this.radius = Math.random() * 1.5 + 0.8;
+          this.color = Math.random() > 0.4 ? "rgba(0, 240, 255," : "rgba(0, 255, 102,";
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0) this.x = w;
+          if (this.x > w) this.x = 0;
+          if (this.y < 0) this.y = h;
+          if (this.y > h) this.y = 0;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = this.color + "0.85)";
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+
+      function animate() {
+        ctx.clearRect(0, 0, w, h);
+        for (let i = 0; i < particles.length; i++) {
+          particles[i].update();
+          particles[i].draw();
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 110) {
+              ctx.beginPath();
+              ctx.strokeStyle = `rgba(0, 240, 255, ${0.25 * (1 - dist / 110)})`;
+              ctx.lineWidth = 0.6;
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+    });
+  </script>
+</body>
+</html>

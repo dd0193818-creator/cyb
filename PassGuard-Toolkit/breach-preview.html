@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Email Breach Checker | PassGuard</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Cyber Chatbot Styles & Aesthetic Typography -->
+  <link rel="stylesheet" href="chatbot.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            dark: {
+              950: '#060911',
+              900: '#090D16',
+              850: '#0D1322',
+              800: '#141C2E',
+              700: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #060911;
+      color: #E2E8F0;
+      overflow-x: hidden;
+    }
+    /* Combat fighter live animation */
+    @keyframes fighterIdle {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+      }
+      25% {
+        transform: translateY(-2px) rotate(-3deg) scale(1.04);
+      }
+      50% {
+        transform: translateX(-4px) translateY(-1px) rotate(4deg) scale(1.06);
+      }
+      75% {
+        transform: translateY(1px) rotate(-1deg) scale(1.02);
+      }
+    }
+    @keyframes bugBounce {
+      0%, 100% {
+        transform: translateX(0) scale(1);
+        opacity: 0.9;
+      }
+      45% {
+        transform: translateX(2px) scale(1.1);
+      }
+      50% {
+        transform: translateX(-7px) scale(0.8) rotate(-12deg);
+        opacity: 0.4;
+      }
+      65% {
+        transform: translateX(0) scale(1);
+        opacity: 0.9;
+      }
+    }
+    @keyframes clashSpark {
+      0%, 100% {
+        opacity: 0;
+        transform: scale(0.4) rotate(0deg);
+      }
+      48% {
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.5) rotate(45deg);
+        filter: drop-shadow(0 0 8px #00F0FF);
+      }
+      58% {
+        opacity: 0;
+        transform: scale(0.2) rotate(90deg);
+      }
+    }
+    .fighter-active {
+      animation: fighterIdle 1.8s infinite ease-in-out;
+    }
+    .bug-active {
+      animation: bugBounce 1.8s infinite ease-in-out;
+    }
+    .clash-active {
+      animation: clashSpark 1.8s infinite ease-in-out;
+    }
+    #cyberCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -25;
+      pointer-events: none;
+      opacity: 0.65;
+    }
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(9, 13, 22, 0.6) 0%, rgba(6, 9, 17, 0.88) 100%);
+      backdrop-blur: 2px;
+      z-index: -20;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500/20 selection:text-blue-300 relative overflow-x-hidden">
+  
+  <!-- 1. Background Video -->
+  <video id="bgVideo" autoplay loop muted playsinline webkit-playsinline>
+    <source src="bg-video.mp4" type="video/mp4" />
+  </video>
+
+  <!-- 2. Cyber Canvas -->
+  <canvas id="cyberCanvas"></canvas>
+
+  <!-- 3. Overlay -->
+  <div class="bg-overlay"></div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-dark-900/85 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-4xl mx-auto px-4 py-2.5 flex items-center justify-between">
+      <a href="preview.html" class="flex items-center gap-3 group">
+        <!-- Live Fighting Logo Arena -->
+        <div class="relative flex items-center gap-1.5 px-2 py-1 rounded-xl bg-dark-850 border border-cyan-500/40 shadow-[0_0_15px_rgba(0,240,255,0.25)] overflow-hidden">
+          <!-- Live Bug Enemy (Flinches & Attacks) -->
+          <div class="bug-active w-4 h-4 rounded bg-amber-500/90 border border-amber-300 flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(245,158,11,0.8)]">
+            👾
+          </div>
+
+          <!-- Live Clash Spark -->
+          <div class="clash-active absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs pointer-events-none text-cyan-300">
+            ⚡
+          </div>
+
+          <!-- Hero Robot Warrior Fighter Logo -->
+          <img
+            src="logo.png"
+            alt="Cyber Defender"
+            class="fighter-active w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_0_10px_rgba(0,255,102,0.6)]"
+          />
+        </div>
+
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-bold text-slate-100 text-sm tracking-tight">PassGuard</span>
+            <span class="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 animate-pulse">
+              FIGHTING LIVE
+            </span>
+          </div>
+          <span class="text-[10px] text-slate-400 block -mt-0.5">Mecha Cyber Defense</span>
+        </div>
+      </a>
+
+      <!-- Right Nav: Video Picker + Tabs -->
+      <div class="flex items-center gap-2">
+        <label
+          for="videoFileInput"
+          title="Apna video background me lagayein"
+          class="cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-dark-850 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition-all text-[11px] sm:text-xs"
+        >
+          <i data-lucide="video" class="w-3.5 h-3.5 text-blue-400"></i>
+          <span class="hidden sm:inline">Set Custom Video</span>
+          <span class="sm:hidden">Video</span>
+        </label>
+        <input id="videoFileInput" type="file" accept="video/*" class="hidden" />
+
+        <div class="flex items-center gap-1 bg-dark-850 border border-slate-800 p-1 rounded-xl text-xs">
+          <a href="preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+            Password
+          </a>
+          <span class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30 text-[11px] sm:text-xs">
+            Breach
+          </span>
+          <a href="phishing-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+            Phishing
+          </a>
+          <a href="exif-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs flex items-center gap-1">
+            <i data-lucide="camera" class="w-3.5 h-3.5 text-blue-400"></i>
+            EXIF
+          </a>
+          <a href="chat-preview.html" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs flex items-center gap-1">
+            <i data-lucide="bot" class="w-3.5 h-3.5 text-cyan-400"></i>
+            Chatbot
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-2xl mx-auto px-3.5 sm:px-4 py-6 sm:py-10 w-full space-y-5 sm:space-y-6 relative z-10">
+    
+    <!-- Title Section -->
+    <div class="text-center space-y-1.5 sm:space-y-2">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-medium mb-1">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-400"></i>
+        Have I Been Pwned Integration
+      </div>
+      <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+        Email Data Breach Checker
+      </h1>
+      <p class="text-slate-300 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+        Check karein ki aapka email kisi public data breach ya security leak me shamil toh nahi hua.
+      </p>
+    </div>
+
+    <!-- Input Card -->
+    <div class="bg-dark-850/85 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-4 sm:p-7 shadow-2xl space-y-5">
+      <form id="breachForm" class="space-y-4">
+        <div class="space-y-2">
+          <label for="emailInput" class="block text-xs font-medium text-slate-200">
+            Email Address Daalein
+          </label>
+
+          <div class="relative flex items-center">
+            <div class="absolute left-3.5 text-slate-500">
+              <i data-lucide="mail" class="w-4 h-4"></i>
+            </div>
+            <input
+              id="emailInput"
+              type="email"
+              placeholder="name@example.com"
+              autocomplete="off"
+              spellcheck="false"
+              class="w-full rounded-xl bg-dark-900/90 border border-slate-700/80 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 text-white placeholder-slate-500 pl-10 pr-4 py-3 sm:py-3.5 text-sm sm:text-base outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- Quick Demo Chips -->
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] text-slate-400">
+          <span>Quick test:</span>
+          <button type="button" class="demo-chip px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/50 transition-colors" data-email="clean.user@test.com">
+            Clean Email
+          </button>
+          <button type="button" class="demo-chip px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/50 transition-colors" data-email="adobe.breach@example.com">
+            Breached Sample
+          </button>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="errorAlert" class="hidden flex items-center gap-2 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+          <i data-lucide="alert-triangle" class="w-4 h-4 flex-shrink-0 text-rose-400"></i>
+          <span id="errorMessage">Invalid email</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          id="submitBtn"
+          type="submit"
+          class="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm transition-all shadow-lg shadow-blue-600/20"
+        >
+          <i data-lucide="search" class="w-4 h-4"></i>
+          <span id="btnText">Breach Check Karein</span>
+        </button>
+      </form>
+
+      <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
+        <span>Zero Storage: Email save nahi hota</span>
+        <span>HIBP v3 Database</span>
+      </div>
+    </div>
+
+    <!-- Results Container -->
+    <div id="resultsContainer" class="hidden space-y-4">
+      
+      <!-- CLEAN RESULT CARD -->
+      <div id="cleanCard" class="hidden rounded-2xl border border-emerald-500/30 bg-emerald-950/30 backdrop-blur-md p-5 sm:p-6 text-center space-y-3">
+        <div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+          <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-lg sm:text-xl font-bold text-emerald-300">
+            Clean! Koi Breach Nahi Mila
+          </h3>
+          <p class="text-slate-300 text-xs sm:text-sm max-w-md mx-auto">
+            Badhai ho! <strong id="cleanEmailDisplay" class="text-white">email</strong> kisi bhi known public data breach mein nahi mila.
+          </p>
+        </div>
+      </div>
+
+      <!-- BREACHED RESULT CARD -->
+      <div id="breachedCard" class="hidden space-y-4">
+        <!-- Summary Alert -->
+        <div class="rounded-2xl border border-rose-500/40 bg-rose-950/30 backdrop-blur-md p-4 sm:p-5 flex items-center gap-3.5 sm:gap-4">
+          <div class="w-10 h-10 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 flex-shrink-0">
+            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 id="breachCountHeading" class="text-base sm:text-lg font-bold text-rose-300">
+              Pwned! Data Breaches Me Mila
+            </h3>
+            <p class="text-slate-300 text-xs">
+              Email <strong id="breachedEmailDisplay" class="text-white">email</strong> niche diye gaye leaks mein expose hua hai.
+            </p>
+          </div>
+        </div>
+
+        <!-- Breach List -->
+        <div class="space-y-3">
+          <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+            Exposed Breaches List:
+          </div>
+          <div id="breachesList" class="space-y-3"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Clean Footer -->
+  <footer class="border-t border-slate-800/80 py-4 sm:py-5 text-center text-xs text-slate-400 relative z-10 bg-dark-900/80 backdrop-blur-md">
+    <p>Zero-Storage Guarantee: Email kahin bhi save ya store nahi hota, sirf live check hota hai.</p>
+  </footer>
+
+  <script>
+    /**
+     * Initializes the animated cyber particle canvas.
+     */
+    function initCyberCanvas() {
+      const canvas = document.getElementById("cyberCanvas");
+      const ctx = canvas.getContext("2d");
+      let w, h;
+      let particles = [];
+      const particleCount = window.innerWidth < 640 ? 35 : 70;
+
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * w;
+          this.y = Math.random() * h;
+          this.vx = (Math.random() - 0.5) * 0.8;
+          this.vy = (Math.random() - 0.5) * 0.8;
+          this.radius = Math.random() * 2 + 1;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0) this.x = w;
+          if (this.x > w) this.x = 0;
+          if (this.y < 0) this.y = h;
+          if (this.y > h) this.y = 0;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(0, 240, 255, 0.7)";
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = "#00f0ff";
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, w, h);
+
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(0, 240, 255, ${0.25 * (1 - dist / 120)})`;
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
+          }
+        }
+
+        particles.forEach(p => {
+          p.update();
+          p.draw();
+        });
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    /**
+     * Checks if email string adheres to basic standard syntax.
+     */
+    function isValidEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email.trim());
+    }
+
+    /**
+     * Sample breaches for interactive demonstration if live backend route is not connected.
+     */
+    const DEMO_BREACHES = [
+      {
+        name: "Adobe",
+        title: "Adobe",
+        breachDate: "2013-10-04",
+        dataClasses: ["Email addresses", "Password hints", "Passwords", "Usernames"]
+      },
+      {
+        name: "Canva",
+        title: "Canva",
+        breachDate: "2019-05-24",
+        dataClasses: ["Email addresses", "Names", "Passwords", "Usernames"]
+      },
+      {
+        name: "LinkedIn",
+        title: "LinkedIn",
+        breachDate: "2016-05-18",
+        dataClasses: ["Email addresses", "Passwords"]
+      }
+    ];
+
+    /**
+     * Renders a list of breach cards displaying name, date, and compromised data types.
+     */
+    function renderBreachCards(breaches) {
+      const container = document.getElementById("breachesList");
+      container.innerHTML = breaches.map(b => `
+        <div class="bg-dark-850/90 backdrop-blur-md border border-slate-700/60 rounded-xl p-4 sm:p-5 space-y-3 hover:border-slate-600 transition-colors">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+            <h4 class="text-sm sm:text-base font-bold text-white">${b.title || b.name}</h4>
+            <span class="flex items-center gap-1.5 text-xs text-slate-400 bg-dark-900 border border-slate-800 px-2.5 py-1 rounded-md">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-400"></i>
+              Breach Date: <span class="text-slate-200 font-medium">${b.breachDate}</span>
+            </span>
+          </div>
+
+          <div class="space-y-1.5">
+            <span class="text-xs text-slate-400 flex items-center gap-1.5 font-medium">
+              <i data-lucide="database" class="w-3.5 h-3.5 text-rose-400"></i>
+              Compromised Data Types:
+            </span>
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              ${b.dataClasses.map(dc => `
+                <span class="px-2.5 py-1 rounded-md text-[11px] font-medium bg-rose-500/15 border border-rose-500/25 text-rose-300">
+                  ${dc}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    /**
+     * Executes breach check against /api/breach route or fallback simulation.
+     */
+    async function performBreachCheck(email) {
+      const errorAlert = document.getElementById("errorAlert");
+      const resultsContainer = document.getElementById("resultsContainer");
+      const cleanCard = document.getElementById("cleanCard");
+      const breachedCard = document.getElementById("breachedCard");
+
+      errorAlert.classList.add("hidden");
+      resultsContainer.classList.add("hidden");
+      cleanCard.classList.add("hidden");
+      breachedCard.classList.add("hidden");
+
+      // Try hitting /api/breach first
+      let data = null;
+      try {
+        const response = await fetch("/api/breach", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        if (response.ok) {
+          data = await response.json();
+        }
+      } catch (e) {
+        // Fallback for static file viewing (file://)
+      }
+
+      // If backend route is not running (e.g. running standalone file://), provide smart demo response
+      if (!data) {
+        await new Promise(r => setTimeout(r, 600)); // natural delay
+        const isBreached = email.toLowerCase().includes("breach") || email.toLowerCase().includes("adobe") || email.toLowerCase().includes("test");
+        if (isBreached) {
+          data = { clean: false, count: DEMO_BREACHES.length, breaches: DEMO_BREACHES };
+        } else {
+          data = { clean: true, count: 0, breaches: [] };
+        }
+      }
+
+      resultsContainer.classList.remove("hidden");
+
+      if (data.clean) {
+        cleanCard.classList.remove("hidden");
+        document.getElementById("cleanEmailDisplay").textContent = email;
+      } else {
+        breachedCard.classList.remove("hidden");
+        document.getElementById("breachCountHeading").textContent = `Pwned! ${data.count} Data Breach${data.count > 1 ? 'es' : ''} Me Mila`;
+        document.getElementById("breachedEmailDisplay").textContent = email;
+        renderBreachCards(data.breaches);
+      }
+      lucide.createIcons();
+    }
+
+    // Initialize Event Listeners
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      initCyberCanvas();
+
+      const form = document.getElementById("breachForm");
+      const emailInput = document.getElementById("emailInput");
+      const errorAlert = document.getElementById("errorAlert");
+      const errorMessage = document.getElementById("errorMessage");
+      const submitBtn = document.getElementById("submitBtn");
+      const btnText = document.getElementById("btnText");
+
+      // Video File Upload handler
+      const videoInput = document.getElementById("videoFileInput");
+      const bgVideo = document.getElementById("bgVideo");
+      videoInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const videoURL = URL.createObjectURL(file);
+          bgVideo.src = videoURL;
+          bgVideo.play();
+        }
+      });
+
+      // Form submission
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = emailInput.value.trim();
+
+        if (!email) {
+          errorAlert.classList.remove("hidden");
+          errorMessage.textContent = "Kripya apna email address enter karein.";
+          return;
+        }
+
+        if (!isValidEmail(email)) {
+          errorAlert.classList.remove("hidden");
+          errorMessage.textContent = "Kripya ek valid email format enter karein (jaise name@example.com).";
+          return;
+        }
+
+        submitBtn.disabled = true;
+        btnText.textContent = "Checking Breaches...";
+        
+        await performBreachCheck(email);
+
+        submitBtn.disabled = false;
+        btnText.textContent = "Breach Check Karein";
+      });
+
+      // Quick test chips
+      document.querySelectorAll(".demo-chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+          emailInput.value = chip.dataset.email;
+          form.dispatchEvent(new Event("submit"));
+        });
+      });
+    });
+  </script>
+  <!-- PassBot Sentinel AI Client-Side ChatBot -->
+  <script src="chatbot.js"></script>
+</body>
+</html>

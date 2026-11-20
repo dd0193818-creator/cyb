@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Phishing Email Analyzer | PassGuard</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Cyber Chatbot Styles & Aesthetic Typography -->
+  <link rel="stylesheet" href="chatbot.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            dark: {
+              950: '#060911',
+              900: '#090D16',
+              850: '#0D1322',
+              800: '#141C2E',
+              700: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #060911;
+      color: #E2E8F0;
+      overflow-x: hidden;
+    }
+    #bgVideo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -30;
+      opacity: 0.45;
+      filter: brightness(0.85) contrast(1.2);
+    }
+    #cyberCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -25;
+      pointer-events: none;
+      opacity: 0.65;
+    }
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(9, 13, 22, 0.6) 0%, rgba(6, 9, 17, 0.88) 100%);
+      backdrop-blur: 2px;
+      z-index: -20;
+      pointer-events: none;
+    }
+    /* Live fighting green warrior animation */
+    @keyframes fighterLiveCombat {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        filter: drop-shadow(0 0 6px rgba(0, 255, 102, 0.5));
+      }
+      30% {
+        transform: translateY(-2px) rotate(-4deg) scale(1.05);
+        filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.7));
+      }
+      50% {
+        transform: translateX(3px) translateY(-1px) rotate(5deg) scale(1.08);
+        filter: drop-shadow(0 0 16px rgba(0, 255, 102, 0.9));
+      }
+      75% {
+        transform: translateY(1px) rotate(-1deg) scale(1.02);
+      }
+    }
+    .fighter-active {
+      animation: fighterLiveCombat 1.6s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500/20 selection:text-blue-300 relative overflow-x-hidden">
+  
+  <!-- 1. Background Video -->
+  <video id="bgVideo" autoplay loop muted playsinline webkit-playsinline>
+    <source src="bg-video.mp4" type="video/mp4" />
+  </video>
+
+  <!-- 2. Cyber Canvas -->
+  <canvas id="cyberCanvas"></canvas>
+
+  <!-- 3. Dark Overlay -->
+  <div class="bg-overlay"></div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-dark-900/85 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-4xl mx-auto px-4 py-2.5 flex items-center justify-between">
+      <a href="preview.html" class="flex items-center gap-2.5 group">
+        <!-- Live Fighting Green Warrior Logo -->
+        <div class="relative flex items-center justify-center w-9 h-9">
+          <img
+            src="logo.png"
+            alt="PassGuard Green Defender"
+            class="fighter-active w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_0_10px_rgba(0,255,102,0.6)]"
+          />
+        </div>
+
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-bold text-slate-100 text-sm tracking-tight">PassGuard</span>
+            <span class="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 animate-pulse">
+              FIGHTING LIVE
+            </span>
+          </div>
+          <span class="text-[10px] text-slate-400 block -mt-0.5">Mecha Cyber Defense</span>
+        </div>
+      </a>
+
+      <!-- Navigation Tabs -->
+      <div class="flex items-center gap-1 bg-dark-850 border border-slate-800 p-1 rounded-xl text-xs">
+        <a href="preview.html" class="px-2 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+          Password
+        </a>
+        <a href="breach-preview.html" class="px-2 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs">
+          Breach
+        </a>
+        <span class="px-2 sm:px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30 text-[11px] sm:text-xs">
+          Phishing Check
+        </span>
+        <a href="exif-preview.html" class="px-2 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs flex items-center gap-1">
+          <i data-lucide="camera" class="w-3.5 h-3.5 text-blue-400"></i>
+          EXIF
+        </a>
+        <a href="chat-preview.html" class="px-2 sm:px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors text-[11px] sm:text-xs flex items-center gap-1">
+          <i data-lucide="bot" class="w-3.5 h-3.5 text-cyan-400"></i>
+          Chatbot
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-3xl mx-auto px-3.5 sm:px-4 py-6 sm:py-10 w-full space-y-5 sm:space-y-6 relative z-10">
+    
+    <!-- Title Section -->
+    <div class="text-center space-y-1.5 sm:space-y-2">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-medium mb-1">
+        <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-blue-400"></i>
+        Rule-Based Phishing & Scam Engine
+      </div>
+      <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+        Phishing Email Analyzer
+      </h1>
+      <p class="text-slate-300 text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
+        Raw email paste karein aur urgent words, fake domains, suspicious links, aur attachments ka live risk score dekhein.
+      </p>
+    </div>
+
+    <!-- Input Card -->
+    <div class="bg-dark-850/85 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-4 sm:p-7 shadow-2xl space-y-4">
+      
+      <!-- Sample Emails Selector -->
+      <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span class="text-slate-200 font-medium flex items-center gap-1.5">
+          <i data-lucide="mail" class="w-4 h-4 text-blue-400"></i>
+          Raw Email Content Paste Karein:
+        </span>
+
+        <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+          <span class="text-slate-400">Samples:</span>
+          <button type="button" class="sample-btn px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors" data-type="paypal">
+            PayPal Scam
+          </button>
+          <button type="button" class="sample-btn px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors" data-type="invoice">
+            Malicious Invoice
+          </button>
+          <button type="button" class="sample-btn px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors" data-type="clean">
+            Safe Newsletter
+          </button>
+        </div>
+      </div>
+
+      <!-- Textarea -->
+      <div class="relative">
+        <textarea
+          id="emailTextarea"
+          rows="9"
+          placeholder="From: Security Team <service@bank-alert.xyz>&#10;Subject: Urgent: Your account has been suspended!&#10;&#10;Dear Customer, please verify your account immediately..."
+          spellcheck="false"
+          class="w-full rounded-xl bg-dark-900/90 border border-slate-700/80 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 text-white placeholder-slate-500 p-4 font-mono text-xs sm:text-sm outline-none transition-all leading-relaxed"
+        ></textarea>
+
+        <button
+          id="clearBtn"
+          type="button"
+          title="Clear"
+          class="absolute top-3 right-3 p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-rose-400 transition-colors"
+        >
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <button
+          id="analyzeBtn"
+          type="button"
+          class="flex items-center gap-2 py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm transition-all shadow-lg shadow-blue-600/20"
+        >
+          <i data-lucide="shield-alert" class="w-4 h-4"></i>
+          Phishing Check Karein
+        </button>
+
+        <span class="text-[11px] text-slate-400 flex items-center gap-1.5">
+          <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+          Zero Server Storage • 100% In-Browser Privacy
+        </span>
+      </div>
+    </div>
+
+    <!-- Results Container -->
+    <div id="resultsContainer" class="hidden space-y-5">
+      
+      <!-- Score & Summary Card -->
+      <div class="bg-dark-850/85 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-5 sm:p-7 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
+          <div class="space-y-1">
+            <span class="text-xs uppercase tracking-wider text-slate-400 font-medium">
+              Phishing Risk Score
+            </span>
+            <div class="flex items-baseline gap-3">
+              <span class="text-3xl sm:text-5xl font-extrabold text-white">
+                <span id="scoreDisplay">0</span>
+                <span class="text-lg text-slate-400 font-normal"> / 100</span>
+              </span>
+              <span id="riskBadge" class="px-3 py-1 rounded-full text-xs font-bold border tracking-wide uppercase">
+                SAFE
+              </span>
+            </div>
+          </div>
+
+          <!-- Gauge Bar -->
+          <div class="w-full sm:w-48 space-y-1.5">
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>0 Safe</span>
+              <span>50 Sus</span>
+              <span>100 Danger</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden p-0.5">
+              <div
+                id="scoreBar"
+                class="h-full rounded-full transition-all duration-500 w-0 bg-emerald-500"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <p id="summaryText" class="text-xs sm:text-sm text-slate-200 leading-relaxed"></p>
+      </div>
+
+      <!-- Flags Breakdown -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+          <span id="flagsCountHeader">Detected Threat Indicators (0)</span>
+          <span>Rule Severity</span>
+        </div>
+
+        <div id="flagsList" class="space-y-3"></div>
+      </div>
+
+      <!-- Aesthetic Highlighted Email Inspection View -->
+      <div class="bg-dark-850/90 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-3.5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="eye" class="w-4 h-4 text-cyan-400"></i>
+            <h4 class="text-sm font-bold text-white tracking-tight">Aesthetic Highlighted Email Inspection</h4>
+          </div>
+          <div class="flex items-center gap-2 text-[11px] text-slate-400">
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded bg-amber-400"></span> Urgent Flag</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded bg-rose-400"></span> Link / Domain</span>
+          </div>
+        </div>
+
+        <!-- Custom Search / Highlight Input -->
+        <div class="flex items-center gap-2">
+          <input
+            id="customHighlightInput"
+            type="text"
+            placeholder="Type any word to highlight in email..."
+            class="flex-1 bg-dark-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors"
+          />
+          <button
+            id="applyCustomHighlightBtn"
+            type="button"
+            class="px-3.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 text-xs font-medium transition-colors"
+          >
+            Highlight
+          </button>
+        </div>
+
+        <!-- Highlighted Email Content Display -->
+        <div class="relative">
+          <div
+            id="highlightedEmailBox"
+            class="w-full rounded-xl bg-dark-950 border border-slate-800 p-4 font-cyber-mono text-xs text-slate-200 leading-relaxed whitespace-pre-wrap overflow-x-auto max-h-72"
+          ></div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Clean Footer -->
+  <footer class="border-t border-slate-800/80 py-4 sm:py-5 text-center text-xs text-slate-400 relative z-10 bg-dark-900/80 backdrop-blur-md">
+    <p>100% Client-Side Privacy: Email browser se bahar kahin nahi jaata.</p>
+  </footer>
+
+  <script>
+    /**
+     * Initializes the animated cyber constellation canvas.
+     */
+    function initCyberCanvas() {
+      const canvas = document.getElementById("cyberCanvas");
+      const ctx = canvas.getContext("2d");
+      let w, h;
+      let particles = [];
+      const particleCount = window.innerWidth < 640 ? 35 : 70;
+
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * w;
+          this.y = Math.random() * h;
+          this.vx = (Math.random() - 0.5) * 0.8;
+          this.vy = (Math.random() - 0.5) * 0.8;
+          this.radius = Math.random() * 2 + 1;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0) this.x = w;
+          if (this.x > w) this.x = 0;
+          if (this.y < 0) this.y = h;
+          if (this.y > h) this.y = 0;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(0, 240, 255, 0.7)";
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = "#00f0ff";
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, w, h);
+
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(0, 240, 255, ${0.25 * (1 - dist / 120)})`;
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
+          }
+        }
+
+        particles.forEach(p => {
+          p.update();
+          p.draw();
+        });
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    /**
+     * Checks for high-urgency and panic-inducing language.
+     */
+    function checkUrgency(text) {
+      const urgencyPatterns = [
+        /\b(immediate(ly)? action required)\b/i,
+        /\b(account (has been )?suspended)\b/i,
+        /\b(within 24 hours?|within 48 hours?|within 12 hours?)\b/i,
+        /\b(verify your account|confirm your identity)\b/i,
+        /\b(unauthorized (login|activity|access))\b/i,
+        /\b(security alert|threat detected|compromised)\b/i,
+        /\b(final notice|last warning|legal action)\b/i,
+        /\b(password (will expire|has expired))\b/i,
+        /\b(urgent action|act now|limited time)\b/i
+      ];
+
+      const matched = [];
+      urgencyPatterns.forEach(pattern => {
+        const m = text.match(pattern);
+        if (m) matched.push(m[0]);
+      });
+
+      if (matched.length === 0) return null;
+
+      return {
+        title: "Urgent / Fear-Inducing Language Detected",
+        severity: matched.length >= 3 ? "HIGH" : matched.length >= 2 ? "MEDIUM" : "LOW",
+        reason: `Phishers create false urgency to make you act without thinking. Found ${matched.length} urgency trigger phrase(s).`,
+        matchedItems: matched,
+        points: matched.length >= 3 ? 25 : matched.length >= 2 ? 18 : 10
+      };
+    }
+
+    /**
+     * Analyzes sender email and flags domain mismatch or free email corporate spoofing.
+     */
+    function checkSenderDomain(text) {
+      const fromMatch = text.match(/from:\s*([^<\n]+<)?([a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}))>?/i);
+      if (!fromMatch) return null;
+
+      const senderEmail = fromMatch[2].toLowerCase();
+      const senderDomain = fromMatch[3].toLowerCase();
+
+      const reasons = [];
+      let points = 0;
+
+      // Free email provider used for corporate security
+      const freeDomains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "mail.com"];
+      const claimsCorporate = /\b(security team|billing department|support desk|customer care|fraud alert)\b/i.test(text);
+
+      if (freeDomains.includes(senderDomain) && claimsCorporate) {
+        reasons.push(`Sender uses free personal domain (@${senderDomain}) while claiming to be an official corporate team.`);
+        points += 30;
+      }
+
+      // Brand impersonation check
+      const brands = [
+        { name: "PayPal", official: "paypal.com" },
+        { name: "Netflix", official: "netflix.com" },
+        { name: "Google", official: "google.com" },
+        { name: "Apple", official: "apple.com" },
+        { name: "Amazon", official: "amazon.com" },
+        { name: "Microsoft", official: "microsoft.com" }
+      ];
+
+      brands.forEach(b => {
+        if (new RegExp(`\\b${b.name}\\b`, "i").test(text) && !senderDomain.includes(b.official)) {
+          reasons.push(`Email claims to be from ${b.name}, but sender domain is '@${senderDomain}' instead of '${b.official}'.`);
+          points += 35;
+        }
+      });
+
+      // Hyphenated suspicious domain
+      if (/(-security|-verify|-alert|-login|-update)\./i.test(senderDomain)) {
+        reasons.push(`Domain '@${senderDomain}' uses deceptive security keywords typical of phishing domains.`);
+        points += 20;
+      }
+
+      if (reasons.length === 0) return null;
+
+      return {
+        title: "Sender Identity & Domain Discrepancy",
+        severity: "HIGH",
+        reason: reasons.join(" "),
+        matchedItems: [senderEmail],
+        points: Math.min(points, 35)
+      };
+    }
+
+    /**
+     * Checks for deceptive links, IP hostnames, shorteners, or high-risk TLDs.
+     */
+    function checkLinks(text) {
+      const matches = text.match(/(https?:\/\/[^\s"'<>]+)/gi) || [];
+      const unique = Array.from(new Set(matches));
+
+      const sus = [];
+      let points = 0;
+
+      unique.forEach(link => {
+        try {
+          const u = new URL(link);
+          const host = u.hostname.toLowerCase();
+
+          if (/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) {
+            sus.push(`Direct IP address URL: ${link}`);
+            points += 25;
+          }
+          if (["bit.ly", "tinyurl.com", "cutt.ly", "t.co"].includes(host)) {
+            sus.push(`Hidden destination via shortener: ${host}`);
+            points += 15;
+          }
+          if (/\.(xyz|top|work|click|buzz|tk|zip|mov)$/i.test(host)) {
+            sus.push(`High-risk domain extension: .${host.split('.').pop()} (${host})`);
+            points += 20;
+          }
+          if (u.protocol === "http:" && /(login|verify|account|banking)/i.test(link)) {
+            sus.push(`Insecure HTTP link for sensitive action: ${link}`);
+            points += 15;
+          }
+        } catch(e) {}
+      });
+
+      if (sus.length === 0) return null;
+
+      return {
+        title: "Deceptive or Suspicious Hyperlinks",
+        severity: points >= 25 ? "HIGH" : "MEDIUM",
+        reason: `Found ${sus.length} link(s) exhibiting phishing traits like unverified domains or IP address targets.`,
+        matchedItems: sus,
+        points: Math.min(points, 35)
+      };
+    }
+
+    /**
+     * Checks for dangerous file attachments.
+     */
+    function checkAttachments(text) {
+      const patterns = [
+        /\b[a-zA-Z0-9_-]+\.(exe|scr|vbs|bat|cmd|pif|iso)\b/i,
+        /\b(invoice|receipt|statement)\.(zip|rar|7z)\b/i,
+        /\b(password-protected (zip|file))\b/i
+      ];
+
+      const matched = [];
+      patterns.forEach(p => {
+        const m = text.match(p);
+        if (m) matched.push(m[0]);
+      });
+
+      if (matched.length === 0) return null;
+
+      return {
+        title: "Malicious Attachment Reference",
+        severity: "HIGH",
+        reason: "Email references dangerous archive files or executables commonly used to distribute malware/ransomware.",
+        matchedItems: matched,
+        points: 30
+      };
+    }
+
+    /**
+     * Main rule-based analysis function.
+     */
+    function analyzePhishing(text) {
+      const clean = text.trim();
+      if (!clean) return null;
+
+      const flags = [];
+      const urgency = checkUrgency(clean);
+      if (urgency) flags.push(urgency);
+
+      const sender = checkSenderDomain(clean);
+      if (sender) flags.push(sender);
+
+      const links = checkLinks(clean);
+      if (links) flags.push(links);
+
+      const attach = checkAttachments(clean);
+      if (attach) flags.push(attach);
+
+      // Generic Greeting check
+      if (/\b(dear customer|dear user|dear account holder)\b/i.test(clean)) {
+        flags.push({
+          title: "Impersonal / Generic Salutation",
+          severity: "LOW",
+          reason: "Legitimate organizations typically address you by your real name.",
+          matchedItems: ["Dear Customer / User"],
+          points: 8
+        });
+      }
+
+      const totalScore = Math.min(flags.reduce((sum, f) => sum + f.points, 0), 100);
+
+      let risk = "SAFE";
+      let badgeStyle = "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      let summary = "Koi major phishing signals detect nahi hue. Email safe lag raha hai.";
+
+      if (totalScore >= 65) {
+        risk = "HIGH PHISHING RISK";
+        badgeStyle = "bg-rose-500/20 border-rose-500/40 text-rose-300";
+        summary = "⚠️ Dangerous Phishing Alert! Multiple high-severity flags trigger hue hain. Kisi bhi link ya attachment ko na kholein.";
+      } else if (totalScore >= 25) {
+        risk = "SUSPICIOUS / MODERATE";
+        badgeStyle = "bg-amber-500/20 border-amber-500/40 text-amber-300";
+        summary = "⚠️ Suspicious indicators mile hain. Sender address aur links ko manually verify karein.";
+      }
+
+      return { score: totalScore, risk, badgeStyle, summary, flags };
+    }
+
+    // Initialize Event Listeners
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      initCyberCanvas();
+
+      const textarea = document.getElementById("emailTextarea");
+      const analyzeBtn = document.getElementById("analyzeBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const resultsContainer = document.getElementById("resultsContainer");
+      const scoreDisplay = document.getElementById("scoreDisplay");
+      const riskBadge = document.getElementById("riskBadge");
+      const scoreBar = document.getElementById("scoreBar");
+      const summaryText = document.getElementById("summaryText");
+      const flagsList = document.getElementById("flagsList");
+      const flagsCountHeader = document.getElementById("flagsCountHeader");
+
+      function runAnalysis() {
+        const text = textarea.value;
+        const res = analyzePhishing(text);
+        if (!res) return;
+
+        resultsContainer.classList.remove("hidden");
+        scoreDisplay.textContent = res.score;
+        riskBadge.textContent = res.risk;
+        riskBadge.className = `px-3 py-1 rounded-full text-xs font-bold border tracking-wide uppercase ${res.badgeStyle}`;
+        
+        scoreBar.style.width = `${Math.max(res.score, 5)}%`;
+        scoreBar.className = `h-full rounded-full transition-all duration-500 ${
+          res.score >= 65 ? "bg-rose-500" : res.score >= 25 ? "bg-amber-500" : "bg-emerald-500"
+        }`;
+
+        summaryText.textContent = res.summary;
+        flagsCountHeader.textContent = `Detected Threat Indicators (${res.flags.length})`;
+
+        if (res.flags.length === 0) {
+          flagsList.innerHTML = `
+            <div class="bg-dark-850 border border-emerald-500/30 rounded-xl p-5 text-center text-xs text-emerald-300 flex items-center justify-center gap-2">
+              <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+              <span>Koi suspicious flag nahi mila. Email authentic lag raha hai.</span>
+            </div>
+          `;
+        } else {
+          flagsList.innerHTML = res.flags.map(f => `
+            <div class="bg-dark-850/90 border border-slate-700/60 rounded-xl p-4 sm:p-5 space-y-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
+                  <h4 class="text-sm font-bold text-white">${f.title}</h4>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${
+                  f.severity === 'HIGH' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' :
+                  f.severity === 'MEDIUM' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                  'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                }">
+                  ${f.severity} (+${f.points} pts)
+                </span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">${f.reason}</p>
+              ${f.matchedItems.length > 0 ? `
+                <div class="flex flex-wrap gap-1.5 pt-1">
+                  ${f.matchedItems.map(item => `
+                    <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700/80 text-[11px] font-mono text-slate-300">
+                      "${item}"
+                    </span>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `).join('');
+        }
+
+        lucide.createIcons();
+
+        // Aesthetic Email Highlight Rendering
+        updateHighlightedView(res.flags.flatMap(f => f.matchedItems));
+      }
+
+      function updateHighlightedView(matchedItems = []) {
+        const rawText = textarea.value;
+        const customTerm = document.getElementById("customHighlightInput")?.value || "";
+        
+        let safe = rawText
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+        const allTerms = [...matchedItems];
+        if (customTerm.trim()) allTerms.push(customTerm.trim());
+
+        const uniqueTerms = Array.from(new Set(allTerms)).filter(t => t && t.length > 0).sort((a, b) => b.length - a.length);
+
+        uniqueTerms.forEach(term => {
+          const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const isDanger = term.includes(".xyz") || term.includes("http") || term.includes(".zip");
+          const markClass = isDanger ? "cyber-mark cyber-mark-danger" : "cyber-mark";
+          const re = new RegExp(`(${escaped})`, "gi");
+          safe = safe.replace(re, `<mark class="${markClass}">$1</mark>`);
+        });
+
+        const box = document.getElementById("highlightedEmailBox");
+        if (box) box.innerHTML = safe;
+      }
+
+      document.getElementById("applyCustomHighlightBtn")?.addEventListener("click", () => {
+        const text = textarea.value;
+        const res = analyzePhishing(text);
+        updateHighlightedView(res ? res.flags.flatMap(f => f.matchedItems) : []);
+      });
+
+      document.getElementById("customHighlightInput")?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          document.getElementById("applyCustomHighlightBtn")?.click();
+        }
+      });
+
+      analyzeBtn.addEventListener("click", runAnalysis);
+
+      clearBtn.addEventListener("click", () => {
+        textarea.value = "";
+        resultsContainer.classList.add("hidden");
+      });
+
+      // Sample templates
+      const SAMPLES = {
+        paypal: `From: Security Team <service-update@paypa1-security-alert.xyz>
+Subject: URGENT: Account Suspended within 24 hours!
+
+Dear Customer,
+
+We detected unauthorized activity on your PayPal account.
+Your account has been temporarily suspended to protect your funds.
+
+Immediate action required! You must verify your account within 24 hours.
+
+Click here to restore access:
+http://paypa1-security-login.xyz/verify-account
+
+Do not ignore this final notice.`,
+        invoice: `From: Accounts Dept <billing@gmail.com>
+Subject: Final Notice: Overdue Invoice #INV-8812
+
+Dear Account Holder,
+
+Please find attached your remittance statement invoice_8812.zip.
+Immediate action required to avoid legal penalty.
+
+Kindly open invoice_8812.zip with password: 123`,
+        clean: `From: GitHub <notifications@github.com>
+Subject: Weekly Digest: 3 Pull Requests Merged
+
+Hi Alex,
+
+Here is your weekly summary for the repositories you follow.
+You can view your full activity on your GitHub dashboard:
+https://github.com/dashboard`
+      };
+
+      document.querySelectorAll(".sample-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const type = btn.dataset.type;
+          textarea.value = SAMPLES[type];
+          runAnalysis();
+        });
+      });
+    });
+  </script>
+  <!-- PassBot Sentinel AI Client-Side ChatBot -->
+  <script src="chatbot.js"></script>
+</body>
+</html>
